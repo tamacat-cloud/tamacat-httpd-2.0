@@ -1,0 +1,18 @@
+{
+  "port": 80,
+  "host": "localhost",
+  "maxTotal": 100,
+  "maxPerRoute": 20,
+  "SoTimeout": 60,
+  "services": [
+    {
+      "path": "/examples/",
+      "type": "reverse",
+      "id": "examples",
+      "config": "components.xml",
+      "reverse": {
+        "url": "http://localhost:8080/examples/"
+      }
+    }
+  ]
+}
