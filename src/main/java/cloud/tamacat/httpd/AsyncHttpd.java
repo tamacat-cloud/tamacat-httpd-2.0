@@ -27,6 +27,7 @@ import cloud.tamacat.httpd.reverse.handler.IncomingExchangeHandler;
 import cloud.tamacat.httpd.web.handler.AsyncFileServerRequestHandler;
 import cloud.tamacat.log.Log;
 import cloud.tamacat.log.LogFactory;
+import cloud.tamacat.util.ClassUtils;
 
 /**
  * Asynchronous embedded HTTP/1.1 server.
@@ -97,8 +98,7 @@ public class AsyncHttpd {
 	
 	protected void registerFileServer(ServiceConfig serviceConfig, AsyncServerBootstrap bootstrap, HttpAsyncRequester requester) {
 		try {
-			String htdocs = "./htdocs"; //TODO
-			File docsRoot = new File(htdocs);
+			File docsRoot = new File(ClassUtils.getURL("htdocs").getFile()); //TODO
 			LOG.info(serviceConfig.getPath() + "* File server to " + docsRoot);
 			bootstrap.register(serviceConfig.getPath() + "*", new AsyncFileServerRequestHandler(docsRoot));
 		} catch (Exception e) {

@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Locale;
+import java.util.Properties;
 
 import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.EndpointDetails;
@@ -39,7 +40,6 @@ import org.apache.hc.core5.http.HttpException;
 import org.apache.hc.core5.http.HttpRequest;
 import org.apache.hc.core5.http.HttpStatus;
 import org.apache.hc.core5.http.Message;
-import org.apache.hc.core5.http.ProtocolException;
 import org.apache.hc.core5.http.nio.AsyncRequestConsumer;
 import org.apache.hc.core5.http.nio.AsyncServerRequestHandler;
 import org.apache.hc.core5.http.nio.BasicRequestConsumer;
@@ -49,6 +49,14 @@ import org.apache.hc.core5.http.nio.entity.NoopEntityConsumer;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.apache.hc.core5.http.protocol.HttpCoreContext;
 
+import cloud.tamacat.httpd.error.ForbiddenException;
+import cloud.tamacat.httpd.error.NotFoundException;
+import cloud.tamacat.httpd.error.VelocityErrorPage;
+import cloud.tamacat.log.Log;
+import cloud.tamacat.log.LogFactory;
+import cloud.tamacat.util.PropertyUtils;
+import cloud.tamacat.util.StringUtils;
+
 /**
  * Asynchronous embedded HTTP/1.1 file server.
  * 
@@ -56,72 +64,101 @@ import org.apache.hc.core5.http.protocol.HttpCoreContext;
  */
 public class AsyncFileServerRequestHandler implements AsyncServerRequestHandler<Message<HttpRequest, Void>> {
 
-	File docsRoot;
+	static final Log LOG = LogFactory.getLog(AsyncFileServerRequestHandler.class);
 	
-	public AsyncFileServerRequestHandler() {}
-	
+	protected ClassLoader loader;
+	protected VelocityErrorPage errorPage;
+	protected String welcomeFile = "index.html";
+	protected Properties props;
+
+	protected File docsRoot;
+
+	public AsyncFileServerRequestHandler() {
+		this(new File("./htdocs"));
+	}
+
 	public AsyncFileServerRequestHandler(File docsRoot) {
 		this.docsRoot = docsRoot;
+		Properties props = PropertyUtils.getProperties("velocity.properties", getClassLoader());
+		errorPage = new VelocityErrorPage(props);
+	}
+
+	@Override
+	public AsyncRequestConsumer<Message<HttpRequest, Void>> prepare(HttpRequest request,
+			EntityDetails entityDetails, HttpContext context) throws HttpException {
+		return new BasicRequestConsumer<>(entityDetails != null ? new NoopEntityConsumer() : null);
+	}
+
+	@Override
+	public void handle(Message<HttpRequest, Void> message, ResponseTrigger responseTrigger, HttpContext context)
+			throws HttpException, IOException {
+		HttpRequest request = message.getHead();
+		try {
+			URI requestUri;
+			try {
+				requestUri = request.getUri();
+			} catch (final URISyntaxException ex) {
+				throw new NotFoundException(ex.getMessage(), ex);
+			}
+			String path = requestUri.getPath();
+			File file = new File(docsRoot, path);
+			if (!file.exists()) {
+				throw new NotFoundException("Not found file " + file.getPath());
+			} else if (!file.canRead() || file.isDirectory()) {
+				if (StringUtils.isNotEmpty(welcomeFile)) {
+					file = new File(file.getPath(), welcomeFile);
+					if (!file.exists()) {
+						throw new NotFoundException("Not found file " + file.getPath());
+					}
+				} else {
+					throw new ForbiddenException("Cannot read file " + file.getPath());
+				}
+			}
+			ContentType contentType;
+			String filename = file.getName().toLowerCase(Locale.ROOT);
+			if (filename.endsWith(".txt")) {
+				contentType = ContentType.TEXT_PLAIN;
+			} else if (filename.endsWith(".html") || filename.endsWith(".htm")) {
+				contentType = ContentType.TEXT_HTML;
+			} else if (filename.endsWith(".xml")) {
+				contentType = ContentType.TEXT_XML;
+			} else {
+				contentType = ContentType.DEFAULT_BINARY;
+			}
+	
+			HttpCoreContext coreContext = HttpCoreContext.adapt(context);
+			EndpointDetails endpoint = coreContext.getEndpointDetails();
+			LOG.debug(endpoint + ": serving file " + file.getPath());
+			responseTrigger.submitResponse(
+				new BasicResponseProducer(HttpStatus.SC_OK,
+				new FileEntityProducer(file, contentType)),
+				context
+			);
+		} catch (NotFoundException e) {
+			handleNotFound(request, responseTrigger, context, e);
+		} catch (ForbiddenException e) {
+			handleForbidden(request, responseTrigger, context, e);
+		}
+	}
+
+	protected void handleNotFound(HttpRequest request, ResponseTrigger responseTrigger, HttpContext context, NotFoundException e) throws HttpException, IOException {
+		LOG.debug(e.getMessage());
+		String html = errorPage.getErrorPage(request, new NotFoundException());
+		responseTrigger.submitResponse(new BasicResponseProducer(HttpStatus.SC_NOT_FOUND, html, ContentType.TEXT_HTML), context);
 	}
 	
-    @Override
-    public AsyncRequestConsumer<Message<HttpRequest, Void>> prepare(
-            final HttpRequest request,
-            final EntityDetails entityDetails,
-            final HttpContext context) throws HttpException {
-        return new BasicRequestConsumer<>(entityDetails != null ? new NoopEntityConsumer() : null);
-    }
-
-    @Override
-    public void handle(
-            final Message<HttpRequest, Void> message,
-            final ResponseTrigger responseTrigger,
-            final HttpContext context) throws HttpException, IOException {
-        final HttpRequest request = message.getHead();
-        final URI requestUri;
-        try {
-            requestUri = request.getUri();
-        } catch (final URISyntaxException ex) {
-            throw new ProtocolException(ex.getMessage(), ex);
-        }
-        final String path = requestUri.getPath();
-        final File file = new File(docsRoot, path);
-        if (!file.exists()) {
-
-            System.out.println("File " + file.getPath() + " not found");
-            responseTrigger.submitResponse(new BasicResponseProducer(
-                    HttpStatus.SC_NOT_FOUND,
-                    "<html><body><h1>File" + file.getPath() +
-                            " not found</h1></body></html>",
-                    ContentType.TEXT_HTML), context);
-
-        } else if (!file.canRead() || file.isDirectory()) {
-
-            System.out.println("Cannot read file " + file.getPath());
-            responseTrigger.submitResponse(new BasicResponseProducer(
-                    HttpStatus.SC_FORBIDDEN,
-                    "<html><body><h1>Access denied</h1></body></html>",
-                    ContentType.TEXT_HTML), context);
-
-        } else {
-
-            final ContentType contentType;
-            final String filename = file.getName().toLowerCase(Locale.ROOT);
-            if (filename.endsWith(".txt")) {
-                contentType = ContentType.TEXT_PLAIN;
-            } else if (filename.endsWith(".html") || filename.endsWith(".htm")) {
-                contentType = ContentType.TEXT_HTML;
-            } else if (filename.endsWith(".xml")) {
-                contentType = ContentType.TEXT_XML;
-            } else {
-                contentType = ContentType.DEFAULT_BINARY;
-            }
-
-            final HttpCoreContext coreContext = HttpCoreContext.adapt(context);
-            final EndpointDetails endpoint = coreContext.getEndpointDetails();
-            System.out.println(endpoint + ": serving file " + file.getPath());
-            responseTrigger.submitResponse(new BasicResponseProducer(
-                    HttpStatus.SC_OK, new FileEntityProducer(file, contentType)), context);
-        }
-    }
+	protected void handleForbidden(HttpRequest request, ResponseTrigger responseTrigger, HttpContext context, ForbiddenException e) throws HttpException, IOException {
+		LOG.debug(e.getMessage());
+		String html = errorPage.getErrorPage(request, new ForbiddenException());
+		responseTrigger.submitResponse(new BasicResponseProducer(HttpStatus.SC_FORBIDDEN, html, ContentType.TEXT_HTML), context);
+	}
+	
+	/**
+	 * <p>
+	 * Get the ClassLoader, default is getClass().getClassLoader().
+	 * @return
+	 */
+	public ClassLoader getClassLoader() {
+		return loader != null ? loader : getClass().getClassLoader();
+	}
 }

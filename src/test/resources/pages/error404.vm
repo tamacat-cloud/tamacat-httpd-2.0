@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>404 Not Found</title>
+  <style>
+  #include("pages/default.css")
+  </style>
+</head>
+<body>
+  <div class="error-container">
+    <h1>404 Page Not Found</h1>
+      <p>The requested URL was not found on this server.
+      </p>
+  </div>
+</body>
+</html>

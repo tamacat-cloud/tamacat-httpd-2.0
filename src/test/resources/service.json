@@ -5,6 +5,12 @@
   "maxPerRoute": 20,
   "SoTimeout": 60,
   "services": [
+      {
+      "path": "/",
+      "type": "normal",
+      "id": "default",
+      "config": "components.xml"
+    },
     {
       "path": "/examples/",
       "type": "reverse",

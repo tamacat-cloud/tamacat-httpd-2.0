@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>405 Method Not Allowed</title>
+  <style>
+  #include("pages/default.css")
+  </style>
+</head>
+<body>
+  <div class="error-container">
+    <h1>Method Not Allowed</h1>
+    <p>The requested method ${method} is not allowed for the URL.</p>
+  </div>
+</body>
+</html>
