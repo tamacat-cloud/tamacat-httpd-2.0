@@ -19,7 +19,8 @@ public class ServiceConfig {
 	String id;
 	String config;
 	String handler;
-	
+	String docsRoot;
+
 	ReverseConfig reverse;
 	
 	Collection<ReverseConfig> reverses = CollectionUtils.newArrayList();
@@ -68,6 +69,15 @@ public class ServiceConfig {
 		this.handler = handler;
 		return this;
 	}
+	
+	public String getDocsRoot() {
+		return docsRoot;
+	}
+
+	public ServiceConfig docsRoot(String docsRoot) {
+		this.docsRoot = docsRoot;
+		return this;
+	}
 
 	public ReverseConfig getReverse() {
 		return reverse;
@@ -94,6 +104,7 @@ public class ServiceConfig {
 		if (id != null) json.add("id", id);
 		if (config != null) json.add("config", config);
 		if (handler != null) json.add("handler", handler);
+		if (docsRoot != null) json.add("docsRoot", docsRoot);
 		if (reverse != null) {
 			json.add("reverse", Json.createObjectBuilder().add("url", reverse.url.getPath()));
 		}

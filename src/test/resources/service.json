@@ -9,6 +9,7 @@
       "path": "/",
       "type": "normal",
       "id": "default",
+      "docsRoot": "htdocs",
       "config": "components.xml"
     },
     {

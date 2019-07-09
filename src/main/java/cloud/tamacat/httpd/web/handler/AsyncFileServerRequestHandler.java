@@ -30,6 +30,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.Properties;
 
@@ -49,6 +51,7 @@ import org.apache.hc.core5.http.nio.entity.NoopEntityConsumer;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.apache.hc.core5.http.protocol.HttpCoreContext;
 
+import cloud.tamacat.httpd.config.ServiceConfig;
 import cloud.tamacat.httpd.error.ForbiddenException;
 import cloud.tamacat.httpd.error.NotFoundException;
 import cloud.tamacat.httpd.error.VelocityErrorPage;
@@ -73,8 +76,8 @@ public class AsyncFileServerRequestHandler implements AsyncServerRequestHandler<
 
 	protected File docsRoot;
 
-	public AsyncFileServerRequestHandler() {
-		this(new File("./htdocs"));
+	public AsyncFileServerRequestHandler(ServiceConfig serviceConfig) {
+		this(new File(serviceConfig.getDocsRoot()));
 	}
 
 	public AsyncFileServerRequestHandler(File docsRoot) {
@@ -101,7 +104,7 @@ public class AsyncFileServerRequestHandler implements AsyncServerRequestHandler<
 				throw new NotFoundException(ex.getMessage(), ex);
 			}
 			String path = requestUri.getPath();
-			File file = new File(docsRoot, path);
+			File file = new File(docsRoot, getDecodeUri(path));
 			if (!file.exists()) {
 				throw new NotFoundException("Not found file " + file.getPath());
 			} else if (!file.canRead() || file.isDirectory()) {
@@ -151,6 +154,14 @@ public class AsyncFileServerRequestHandler implements AsyncServerRequestHandler<
 		LOG.debug(e.getMessage());
 		String html = errorPage.getErrorPage(request, new ForbiddenException());
 		responseTrigger.submitResponse(new BasicResponseProducer(HttpStatus.SC_FORBIDDEN, html, ContentType.TEXT_HTML), context);
+	}
+	
+	protected String getDecodeUri(String uri) {
+		String decoded = URLDecoder.decode(uri, StandardCharsets.UTF_8);
+		if (StringUtils.isEmpty(decoded) || decoded.indexOf("../")>=0 || decoded.indexOf("..\\")>=0) {
+			throw new NotFoundException();
+		}
+		return decoded;
 	}
 	
 	/**

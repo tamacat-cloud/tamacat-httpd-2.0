@@ -33,7 +33,7 @@ public class Config {
 	int soTimeout = 60;
 	
 	String json;
-
+	
 	Collection<ServiceConfig> configs = new ArrayList<>();
 
 	public String getServerName() {
@@ -147,7 +147,8 @@ public class Config {
 			serviceConfig.type = JsonUtils.getString.apply(service, "type");
 			serviceConfig.id = JsonUtils.getString.apply(service, "id");
 			serviceConfig.config = JsonUtils.getString.apply(service, "config");
-
+			serviceConfig.docsRoot = JsonUtils.getString.apply(service, "docsRoot");
+			
 			JsonObject reverseConfig = JsonUtils.getObject.apply(service, "reverse");
 			serviceConfig.reverse = parseReverseConfig.apply(reverseConfig);
 

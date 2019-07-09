@@ -3,7 +3,6 @@
  */
 package cloud.tamacat.httpd;
 
-import java.io.File;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
@@ -24,10 +23,10 @@ import cloud.tamacat.httpd.config.ServiceConfig;
 import cloud.tamacat.httpd.listener.TraceConnPoolListener;
 import cloud.tamacat.httpd.listener.TraceHttp1StreamListener;
 import cloud.tamacat.httpd.reverse.handler.IncomingExchangeHandler;
+import cloud.tamacat.httpd.util.ServerUtils;
 import cloud.tamacat.httpd.web.handler.AsyncFileServerRequestHandler;
 import cloud.tamacat.log.Log;
 import cloud.tamacat.log.LogFactory;
-import cloud.tamacat.util.ClassUtils;
 
 /**
  * Asynchronous embedded HTTP/1.1 server.
@@ -37,6 +36,8 @@ public class AsyncHttpd {
 
 	static final Log LOG = LogFactory.getLog("httpd");
 
+	protected String docsRoot;
+	
 	public void startup() throws Exception {
 		Config config = Config.load("service.json");
 
@@ -66,6 +67,14 @@ public class AsyncHttpd {
 		server.awaitShutdown(TimeValue.MAX_VALUE);
 	}
 
+	/**
+	 * <p>Set the path of document root.
+	 * @param docsRoot
+	 */
+	public void setDocsRoot(String docsRoot) {
+		this.docsRoot = ServerUtils.getServerDocsRoot(docsRoot);
+	}
+	
 	protected HttpAsyncRequester createHttpAsyncRequester(Config config, IOReactorConfig reactor) {
 		HttpAsyncRequester requester = AsyncRequesterBootstrap.bootstrap()
 			.setIOReactorConfig(reactor)
@@ -98,10 +107,9 @@ public class AsyncHttpd {
 	
 	protected void registerFileServer(ServiceConfig serviceConfig, AsyncServerBootstrap bootstrap, HttpAsyncRequester requester) {
 		try {
-			File docsRoot = new File(ClassUtils.getURL("htdocs").getFile()); //TODO
-			LOG.info(serviceConfig.getPath() + "* File server to " + docsRoot);
-			bootstrap.register(serviceConfig.getPath() + "*", new AsyncFileServerRequestHandler(docsRoot));
+			bootstrap.register(serviceConfig.getPath() + "*", new AsyncFileServerRequestHandler(serviceConfig));
 		} catch (Exception e) {
+			e.printStackTrace();
 			LOG.error(e.getMessage(), e);
 		}
 	}
