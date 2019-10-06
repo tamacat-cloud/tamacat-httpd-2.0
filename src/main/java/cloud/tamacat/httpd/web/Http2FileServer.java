@@ -36,7 +36,7 @@ import org.apache.hc.core5.http.Header;
 import org.apache.hc.core5.http.HttpConnection;
 import org.apache.hc.core5.http.impl.bootstrap.HttpAsyncServer;
 import org.apache.hc.core5.http2.frame.RawFrame;
-import org.apache.hc.core5.http2.impl.nio.Http2StreamListener;
+import org.apache.hc.core5.http2.impl.nio.H2StreamListener;
 import org.apache.hc.core5.http2.impl.nio.bootstrap.H2ServerBootstrap;
 import org.apache.hc.core5.io.CloseMode;
 import org.apache.hc.core5.reactor.IOReactorConfig;
@@ -73,7 +73,7 @@ public class Http2FileServer {
         final HttpAsyncServer server = H2ServerBootstrap.bootstrap()
                 .setIOReactorConfig(config)
                 //.setVersionPolicy(HttpVersionPolicy.FORCE_HTTP_2)
-                .setStreamListener(new Http2StreamListener() {
+                .setStreamListener(new H2StreamListener() {
 
                     @Override
                     public void onHeaderInput(final HttpConnection connection, final int streamId, final List<? extends Header> headers) {

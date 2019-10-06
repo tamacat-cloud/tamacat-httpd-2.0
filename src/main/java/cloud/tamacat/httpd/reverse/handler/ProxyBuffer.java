@@ -56,4 +56,19 @@ public class ProxyBuffer extends ExpandableBuffer {
 		}
 		return 0;
 	}
+	
+	@Override
+    public int capacity() {
+    	return super.capacity();
+    }
+    
+	@Override
+    public boolean hasData() {
+    	return super.hasData();
+    }
+	
+	@Override
+    public int length() {
+    	return super.length();
+    }
 }

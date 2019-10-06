@@ -5,7 +5,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>cloud.tamacat</groupId>
   <artifactId>tamacat-httpd</artifactId>
-  <version>2.0-alpha-20190530</version>
+  <version>2.0-alpha-20191006</version>
   <packaging>jar</packaging>
   <name>tamacat-httpd</name>
   <url>https://tamacat.cloud/</url>
@@ -26,7 +26,7 @@
   <properties>
     <java.version>11</java.version>
     <tamacat.version>2.0</tamacat.version>
-    <httpcomponents.core5.version>5.0-beta7</httpcomponents.core5.version>
+    <httpcomponents.core5.version>5.0-beta9</httpcomponents.core5.version>
     <junit.jupiter.version>5.4.2</junit.jupiter.version>
     <maven.compiler.source>11</maven.compiler.source>
     <maven.compiler.target>11</maven.compiler.target>
