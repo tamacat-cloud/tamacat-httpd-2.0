@@ -15,10 +15,28 @@
     {
       "path": "/test/",
       "type": "reverse",
-      "id": "examples",
+      "id": "test",
       "config": "components.xml",
       "reverse": {
         "url": "http://localhost:8080/test/"
+      }
+    },
+    {
+      "path": "/examples/",
+      "type": "reverse",
+      "id": "examples",
+      "config": "components.xml",
+      "reverse": {
+        "url": "http://localhost:8080/examples/"
+      }
+    },
+    {
+      "path": "/docs/",
+      "type": "reverse",
+      "id": "docs",
+      "config": "components.xml",
+      "reverse": {
+        "url": "http://localhost:8080/docs/"
       }
     }
   ]

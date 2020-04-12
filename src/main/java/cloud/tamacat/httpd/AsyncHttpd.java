@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.hc.core5.function.Supplier;
 import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.http.impl.HttpProcessors;
 import org.apache.hc.core5.http.impl.bootstrap.AsyncRequesterBootstrap;
 import org.apache.hc.core5.http.impl.bootstrap.AsyncServerBootstrap;
 import org.apache.hc.core5.http.impl.bootstrap.HttpAsyncRequester;
@@ -90,6 +91,7 @@ public class AsyncHttpd {
 		Collection<ServiceConfig> configs = config.getConfigs();
 
 		AsyncServerBootstrap bootstrap = AsyncServerBootstrap.bootstrap()
+			.setHttpProcessor(HttpProcessors.customServer(config.getServerName()).build())
 			.setIOReactorConfig(reactor)
 			.setStreamListener(new TraceHttp1StreamListener("client<-httpd"));
 

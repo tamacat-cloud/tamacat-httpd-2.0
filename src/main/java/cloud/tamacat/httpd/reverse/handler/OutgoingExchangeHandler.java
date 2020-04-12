@@ -78,8 +78,8 @@ public class OutgoingExchangeHandler implements AsyncClientExchangeHandler {
 			.unmodifiableSet(new HashSet<>(Arrays.asList(HttpHeaders.HOST.toLowerCase(Locale.ROOT),
 					HttpHeaders.CONTENT_LENGTH.toLowerCase(Locale.ROOT),
 					HttpHeaders.TRANSFER_ENCODING.toLowerCase(Locale.ROOT),
-					HttpHeaders.CONNECTION.toLowerCase(Locale.ROOT), "Keep-Alive".toLowerCase(Locale.ROOT),
-					"Proxy-Authenticate".toLowerCase(Locale.ROOT), HttpHeaders.TE.toLowerCase(Locale.ROOT),
+					HttpHeaders.CONNECTION.toLowerCase(Locale.ROOT), HttpHeaders.KEEP_ALIVE.toLowerCase(Locale.ROOT),
+					HttpHeaders.PROXY_AUTHENTICATE.toLowerCase(Locale.ROOT), HttpHeaders.TE.toLowerCase(Locale.ROOT),
 					HttpHeaders.TRAILER.toLowerCase(Locale.ROOT), HttpHeaders.UPGRADE.toLowerCase(Locale.ROOT))));
 
 	private final HttpHost targetHost;
@@ -97,8 +97,7 @@ public class OutgoingExchangeHandler implements AsyncClientExchangeHandler {
 		synchronized (exchangeState) {
 			final HttpRequest incomingRequest = exchangeState.request;
 			final EntityDetails entityDetails = exchangeState.requestEntityDetails;
-			final HttpRequest outgoingRequest = new BasicHttpRequest(incomingRequest.getMethod(), targetHost,
-					incomingRequest.getPath());
+			final HttpRequest outgoingRequest = new BasicHttpRequest(incomingRequest.getMethod(), targetHost, incomingRequest.getPath());
 			for (final Iterator<Header> it = incomingRequest.headerIterator(); it.hasNext();) {
 				final Header header = it.next();
 				if (!HOP_BY_HOP.contains(header.getName().toLowerCase(Locale.ROOT))) {
@@ -268,8 +267,7 @@ public class OutgoingExchangeHandler implements AsyncClientExchangeHandler {
 		}
 		synchronized (exchangeState) {
 			if (exchangeState.response == null) {
-				final int status = cause instanceof IOException ? HttpStatus.SC_SERVICE_UNAVAILABLE
-						: HttpStatus.SC_INTERNAL_SERVER_ERROR;
+				final int status = cause instanceof IOException ? HttpStatus.SC_SERVICE_UNAVAILABLE : HttpStatus.SC_INTERNAL_SERVER_ERROR;
 				final HttpResponse outgoingResponse = new BasicHttpResponse(status);
 				outgoingResponse.addHeader(HttpHeaders.CONNECTION, HeaderElements.CLOSE);
 				exchangeState.response = outgoingResponse;
