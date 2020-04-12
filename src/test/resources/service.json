@@ -13,12 +13,12 @@
       "config": "components.xml"
     },
     {
-      "path": "/examples/",
+      "path": "/test/",
       "type": "reverse",
       "id": "examples",
       "config": "components.xml",
       "reverse": {
-        "url": "http://localhost:8080/examples/"
+        "url": "http://localhost:8080/test/"
       }
     }
   ]

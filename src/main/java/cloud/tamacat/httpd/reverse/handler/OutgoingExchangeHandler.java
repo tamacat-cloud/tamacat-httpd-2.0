@@ -60,6 +60,7 @@ import org.apache.hc.core5.http.nio.RequestChannel;
 import org.apache.hc.core5.http.nio.ResponseChannel;
 import org.apache.hc.core5.http.protocol.HttpContext;
 
+import cloud.tamacat.httpd.util.AccessLogUtils;
 import cloud.tamacat.log.Log;
 import cloud.tamacat.log.LogFactory;
 
@@ -117,9 +118,7 @@ public class OutgoingExchangeHandler implements AsyncClientExchangeHandler {
 	public int available() {
 		synchronized (exchangeState) {
 			final int available = exchangeState.inBuf != null ? exchangeState.inBuf.length() : 0;
-			if (LOG.isTraceEnabled()) {
-				LOG.trace("[proxy->origin] " + exchangeState.id + " output available: " + available);
-			}
+			LOG.trace("[proxy->origin] " + exchangeState.id + " output available: " + available);
 			return available;
 		}
 	}
@@ -127,31 +126,23 @@ public class OutgoingExchangeHandler implements AsyncClientExchangeHandler {
 	@Override
 	public void produce(final DataStreamChannel channel) throws IOException {
 		synchronized (exchangeState) {
-			if (LOG.isTraceEnabled()) {
-				LOG.trace("[proxy->origin] " + exchangeState.id + " produce output");
-			}
+			LOG.trace("[proxy->origin] " + exchangeState.id + " produce output");
 			exchangeState.requestDataChannel = channel;
 			if (exchangeState.inBuf != null) {
 				if (exchangeState.inBuf.hasData()) {
 					final int bytesWritten = exchangeState.inBuf.write(channel);
-					if (LOG.isTraceEnabled()) {
-						LOG.trace("[proxy->origin] " + exchangeState.id + " " + bytesWritten + " bytes sent");
-					}
+					LOG.trace("[proxy->origin] " + exchangeState.id + " " + bytesWritten + " bytes sent");
 				}
 				if (exchangeState.inputEnd && !exchangeState.inBuf.hasData()) {
 					channel.endStream();
-					if (LOG.isTraceEnabled()) {
-						LOG.trace("[proxy->origin] " + exchangeState.id + " end of output");
-					}
+					LOG.trace("[proxy->origin] " + exchangeState.id + " end of output");
 				}
 				if (!exchangeState.inputEnd) {
 					final CapacityChannel capacityChannel = exchangeState.requestCapacityChannel;
 					if (capacityChannel != null) {
 						final int capacity = exchangeState.inBuf.capacity();
 						if (capacity > 0) {
-							if (LOG.isTraceEnabled()) {
-								LOG.trace("[client<-proxy] " + exchangeState.id + " input capacity: " + capacity);
-							}
+							LOG.trace("[client<-proxy] " + exchangeState.id + " input capacity: " + capacity);
 							capacityChannel.update(capacity);
 						}
 					}
@@ -172,9 +163,7 @@ public class OutgoingExchangeHandler implements AsyncClientExchangeHandler {
 				LOG.trace("[proxy<-origin] " + exchangeState.id + " status " + incomingResponse.getCode());
 			}
 			if (entityDetails == null) {
-				if (LOG.isTraceEnabled()) {
-					LOG.trace("[proxy<-origin] " + exchangeState.id + " end of input");
-				}
+				LOG.trace("[proxy<-origin] " + exchangeState.id + " end of input");
 			}
 
 			final HttpResponse outgoingResponse = new BasicHttpResponse(incomingResponse.getCode());
@@ -198,11 +187,11 @@ public class OutgoingExchangeHandler implements AsyncClientExchangeHandler {
 				LOG.trace("[client<-proxy] " + exchangeState.id + " status " + outgoingResponse.getCode());
 			}
 			if (entityDetails == null) {
-				if (LOG.isTraceEnabled()) {
-					LOG.trace("[client<-proxy] " + exchangeState.id + " end of output");
-				}
+				LOG.trace("[client<-proxy] " + exchangeState.id + " end of output");
 				clientEndpoint.releaseAndReuse();
 			}
+			final HttpRequest req = exchangeState.request;
+			AccessLogUtils.log(req, incomingResponse, httpContext, exchangeState.getResponseTime());
 		}
 	}
 
@@ -212,9 +201,7 @@ public class OutgoingExchangeHandler implements AsyncClientExchangeHandler {
 			exchangeState.responseCapacityChannel = capacityChannel;
 			final int capacity = exchangeState.outBuf != null ? exchangeState.outBuf.capacity() : INIT_BUFFER_SIZE;
 			if (capacity > 0) {
-				if (LOG.isTraceEnabled()) {
-					LOG.trace("[proxy->origin] " + exchangeState.id + " input capacity: " + capacity);
-				}
+				LOG.trace("[proxy->origin] " + exchangeState.id + " input capacity: " + capacity);
 				capacityChannel.update(capacity);
 			}
 		}
@@ -230,15 +217,11 @@ public class OutgoingExchangeHandler implements AsyncClientExchangeHandler {
 			if (dataChannel != null && exchangeState.outBuf != null) {
 				if (exchangeState.outBuf.hasData()) {
 					final int bytesWritten = exchangeState.outBuf.write(dataChannel);
-					if (LOG.isTraceEnabled()) {
-						LOG.trace("[client<-proxy] " + exchangeState.id + " " + bytesWritten + " bytes sent");
-					}
+					LOG.trace("[client<-proxy] " + exchangeState.id + " " + bytesWritten + " bytes sent");
 				}
 				if (!exchangeState.outBuf.hasData()) {
 					final int bytesWritten = dataChannel.write(src);
-					if (LOG.isTraceEnabled()) {
-						LOG.trace("[client<-proxy] " + exchangeState.id + " " + bytesWritten + " bytes sent");
-					}
+					LOG.trace("[client<-proxy] " + exchangeState.id + " " + bytesWritten + " bytes sent");
 				}
 			}
 			if (src.hasRemaining()) {
@@ -248,9 +231,7 @@ public class OutgoingExchangeHandler implements AsyncClientExchangeHandler {
 				exchangeState.outBuf.put(src);
 			}
 			final int capacity = exchangeState.outBuf != null ? exchangeState.outBuf.capacity() : INIT_BUFFER_SIZE;
-			if (LOG.isTraceEnabled()) {
-				LOG.trace("[proxy->origin] " + exchangeState.id + " input capacity: " + capacity);
-			}
+			LOG.trace("[proxy->origin] " + exchangeState.id + " input capacity: " + capacity);
 			if (dataChannel != null) {
 				dataChannel.requestOutput();
 			}
@@ -260,15 +241,11 @@ public class OutgoingExchangeHandler implements AsyncClientExchangeHandler {
 	@Override
 	public void streamEnd(final List<? extends Header> trailers) throws HttpException, IOException {
 		synchronized (exchangeState) {
-			if (LOG.isTraceEnabled()) {
-				LOG.trace("[proxy<-origin] " + exchangeState.id + " end of input");
-			}
+			LOG.trace("[proxy<-origin] " + exchangeState.id + " end of input");
 			exchangeState.outputEnd = true;
 			final DataStreamChannel dataChannel = exchangeState.responseDataChannel;
 			if (dataChannel != null && (exchangeState.outBuf == null || !exchangeState.outBuf.hasData())) {
-				if (LOG.isTraceEnabled()) {
-					LOG.trace("[client<-proxy] " + exchangeState.id + " end of output");
-				}
+				LOG.trace("[client<-proxy] " + exchangeState.id + " end of output");
 				dataChannel.endStream();
 				clientEndpoint.releaseAndReuse();
 			}

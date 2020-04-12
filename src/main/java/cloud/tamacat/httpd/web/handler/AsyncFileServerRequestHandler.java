@@ -54,10 +54,11 @@ import org.apache.hc.core5.http.protocol.HttpCoreContext;
 import cloud.tamacat.httpd.config.ServiceConfig;
 import cloud.tamacat.httpd.error.ForbiddenException;
 import cloud.tamacat.httpd.error.NotFoundException;
-import cloud.tamacat.httpd.error.VelocityErrorPage;
+import cloud.tamacat.httpd.error.ThymeleafErrorPage;
 import cloud.tamacat.log.Log;
 import cloud.tamacat.log.LogFactory;
 import cloud.tamacat.util.PropertyUtils;
+import cloud.tamacat.util.ResourceNotFoundException;
 import cloud.tamacat.util.StringUtils;
 
 /**
@@ -67,10 +68,11 @@ import cloud.tamacat.util.StringUtils;
  */
 public class AsyncFileServerRequestHandler implements AsyncServerRequestHandler<Message<HttpRequest, Void>> {
 
+	static final Log ACCESS = LogFactory.getLog("Access");
 	static final Log LOG = LogFactory.getLog(AsyncFileServerRequestHandler.class);
 	
 	protected ClassLoader loader;
-	protected VelocityErrorPage errorPage;
+	protected ThymeleafErrorPage errorPage;
 	protected String welcomeFile = "index.html";
 	protected Properties props;
 
@@ -82,8 +84,13 @@ public class AsyncFileServerRequestHandler implements AsyncServerRequestHandler<
 
 	public AsyncFileServerRequestHandler(File docsRoot) {
 		this.docsRoot = docsRoot;
-		Properties props = PropertyUtils.getProperties("velocity.properties", getClassLoader());
-		errorPage = new VelocityErrorPage(props);
+		Properties props = new Properties();
+		try {
+			props = PropertyUtils.getProperties("application.properties", getClassLoader());
+		} catch (ResourceNotFoundException e) {
+			LOG.warn(e.getMessage());
+		}
+		errorPage = new ThymeleafErrorPage(props);
 	}
 
 	@Override
@@ -101,6 +108,7 @@ public class AsyncFileServerRequestHandler implements AsyncServerRequestHandler<
 			try {
 				requestUri = request.getUri();
 			} catch (final URISyntaxException ex) {
+				
 				throw new NotFoundException(ex.getMessage(), ex);
 			}
 			String path = requestUri.getPath();
@@ -137,6 +145,7 @@ public class AsyncFileServerRequestHandler implements AsyncServerRequestHandler<
 				new FileEntityProducer(file, contentType)),
 				context
 			);
+			ACCESS.info(request+" 200 [OK]");
 		} catch (NotFoundException e) {
 			handleNotFound(request, responseTrigger, context, e);
 		} catch (ForbiddenException e) {
@@ -148,12 +157,14 @@ public class AsyncFileServerRequestHandler implements AsyncServerRequestHandler<
 		LOG.debug(e.getMessage());
 		String html = errorPage.getErrorPage(request, new NotFoundException());
 		responseTrigger.submitResponse(new BasicResponseProducer(HttpStatus.SC_NOT_FOUND, html, ContentType.TEXT_HTML), context);
+		ACCESS.info(request+" 404 [NotFound]");
 	}
 	
 	protected void handleForbidden(HttpRequest request, ResponseTrigger responseTrigger, HttpContext context, ForbiddenException e) throws HttpException, IOException {
 		LOG.debug(e.getMessage());
 		String html = errorPage.getErrorPage(request, new ForbiddenException());
 		responseTrigger.submitResponse(new BasicResponseProducer(HttpStatus.SC_FORBIDDEN, html, ContentType.TEXT_HTML), context);
+		ACCESS.info(request+" 403 [Forbidden]");
 	}
 	
 	protected String getDecodeUri(String uri) {

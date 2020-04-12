@@ -59,10 +59,17 @@ public class ProxyExchangeState {
 	CapacityChannel responseCapacityChannel;
 	ProxyBuffer outBuf;
 	boolean outputEnd;
+	
+	long startTime;
 
 	AsyncClientEndpoint clientEndpoint;
 
 	ProxyExchangeState() {
 		this.id = String.format("%08X", COUNT.getAndIncrement());
+		this.startTime = System.currentTimeMillis();
+	}
+	
+	long getResponseTime() {
+		return System.currentTimeMillis() - startTime;
 	}
 }

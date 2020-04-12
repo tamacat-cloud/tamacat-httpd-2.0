@@ -34,7 +34,7 @@ import cloud.tamacat.log.LogFactory;
  */
 public class AsyncHttpd {
 
-	static final Log LOG = LogFactory.getLog("httpd");
+	static final Log LOG = LogFactory.getLog(AsyncHttpd.class);
 
 	protected String docsRoot;
 	

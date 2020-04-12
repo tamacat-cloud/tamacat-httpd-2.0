@@ -62,7 +62,7 @@ import cloud.tamacat.log.LogFactory;
  */
 public class AsyncReverseProxy {
 
-	static final Log LOG = LogFactory.getLog("httpd");
+	static final Log LOG = LogFactory.getLog(AsyncReverseProxy.class);
 	static int maxTotal = 100;
 	static int defaultMaxPerRoute = 20;
 	
