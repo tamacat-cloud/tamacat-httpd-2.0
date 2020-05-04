@@ -5,7 +5,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>cloud.tamacat</groupId>
   <artifactId>tamacat-httpd</artifactId>
-  <version>2.0-alpha-20200304</version>
+  <version>2.0-b${buildDate}-${revision}</version>
   <packaging>jar</packaging>
   <name>tamacat-httpd</name>
   <url>https://tamacat.cloud/</url>
@@ -18,19 +18,23 @@
   </licenses>
 
   <scm>
-    <url>https://github.com/tamacat/tamacat-httpd.git</url>
-    <connection>scm:https://github.com/tamacat/tamacat-httpd.git</connection>
-    <developerConnection>scm:https://github.com/tamacat/tamacat-httpd.git</developerConnection>
+    <url>https://github.com/tamacat-cloud/tamacat-httpd-2.0.git</url>
+    <connection>scm:https://github.com/tamacat-cloud/tamacat-httpd-2.0.git</connection>
+    <developerConnection>scm:https://github.com/tamacat-cloud/tamacat-httpd-2.0.git</developerConnection>
   </scm>
 
   <properties>
     <java.version>11</java.version>
-    <tamacat.version>2.0</tamacat.version>
-    <httpcomponents.core5.version>5.0</httpcomponents.core5.version>
-    <junit.jupiter.version>5.4.2</junit.jupiter.version>
     <maven.compiler.source>11</maven.compiler.source>
     <maven.compiler.target>11</maven.compiler.target>
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm:ssZ</maven.build.timestamp.format>
+    <httpcomponents.core5.version>[5.0,5.1)</httpcomponents.core5.version>
+    <junit.jupiter.version>[5.6,5.7)</junit.jupiter.version>
+    <tamacat.version>[2.0,2.1)</tamacat.version>
+    <buildDate>${maven.build.timestamp}</buildDate>
+    <timestamp>${maven.build.timestamp}</timestamp>
+    <maven.build.timestamp.format>yyyyMMdd</maven.build.timestamp.format>
+    <revision>SNAPSHOT</revision>
   </properties>
 
   <dependencies>
@@ -228,6 +232,14 @@
     </plugins>
   </reporting>
 
+  <distributionManagement>
+    <repository>
+      <id>github</id>
+      <name>github</name>
+      <url>https://maven.pkg.github.com/tamacat-cloud/tamacat-httpd-2.0</url>
+    </repository>
+  </distributionManagement>
+  
   <repositories>
     <repository>
       <id>tamacat.org</id>
