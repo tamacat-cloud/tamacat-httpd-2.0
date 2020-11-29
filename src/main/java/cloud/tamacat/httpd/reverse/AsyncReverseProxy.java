@@ -69,7 +69,7 @@ public class AsyncReverseProxy {
 	public void startup() throws Exception {
 		Config config = Config.load("service.json");
 		
-		Collection<ServiceConfig> configs = config.getConfigs();
+		Collection<ServiceConfig> configs = config.getServices();
 		ServiceConfig serviceConfig = configs.iterator().next();
 
 		HttpHost targetHost = HttpHost.create(serviceConfig.getReverse().getTarget().toURI());

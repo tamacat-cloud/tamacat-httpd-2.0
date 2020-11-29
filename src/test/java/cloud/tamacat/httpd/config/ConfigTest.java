@@ -1,5 +1,7 @@
 /*
- * Copyright (c) 2019 tamacat.org
+ * Copyright 2019 tamacat.org
+ * Licensed under the Apache License, Version 2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  */
 package cloud.tamacat.httpd.config;
 
@@ -12,6 +14,6 @@ public class ConfigTest {
 	@Test
 	public void testLoad() {
 		Config config = Config.load("service.json");
-		System.out.println(JsonUtils.stringify(config.toJson().toString()));
+		System.out.println(JsonUtils.stringify(config));
 	}
 }

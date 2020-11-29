@@ -5,24 +5,44 @@ package cloud.tamacat.httpd.config;
 
 import java.util.Collection;
 
-import javax.json.Json;
-import javax.json.JsonArrayBuilder;
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 
 import cloud.tamacat.util.CollectionUtils;
+import cloud.tamacat.util.JsonUtils;
 
 public class ServiceConfig {
+	
+	@SerializedName("path")
+	@Expose
 	String path;
+	
+	@SerializedName("type")
+	@Expose
 	String type;
 	
+	@SerializedName("id")
+	@Expose
 	String id;
+	
+	@SerializedName("config")
+	@Expose
 	String config;
+	
+	@SerializedName("handler")
+	@Expose
 	String handler;
+	
+	@SerializedName("docsRoot")
+	@Expose
 	String docsRoot;
-
+	
+	@SerializedName("reverse")
+	@Expose
 	ReverseConfig reverse;
 	
+	@SerializedName("reverses")
+	@Expose
 	Collection<ReverseConfig> reverses = CollectionUtils.newArrayList();
 	
 	public String getPath() {
@@ -97,26 +117,13 @@ public class ServiceConfig {
 		return this;
 	}
 	
-	public JsonObject toJson() {
-		JsonObjectBuilder json = Json.createObjectBuilder();
-		if (path != null) json.add("path", path);
-		if (type != null) json.add("type", type);
-		if (id != null) json.add("id", id);
-		if (config != null) json.add("config", config);
-		if (handler != null) json.add("handler", handler);
-		if (docsRoot != null) json.add("docsRoot", docsRoot);
-		if (reverse != null) {
-			json.add("reverse", Json.createObjectBuilder().add("url", reverse.url.getPath()));
-		}
-		if (reverses.size() > 0) {
-			JsonArrayBuilder list = Json.createArrayBuilder();
-			for (ReverseConfig reverse : reverses) {
-				if (reverse.url != null) {
-					list.add(Json.createObjectBuilder().add("url",reverse.url.getPath()));
-				}
-			}
-			json.add("reverses", list);
-		}
-		return json.build();
+	@Override
+	public String toString() {
+		return "ServiceConfig [path=" + path + ", type=" + type + ", id=" + id + ", config=" + config + ", handler="
+				+ handler + ", docsRoot=" + docsRoot + ", reverse=" + reverse + ", reverses=" + reverses + "]";
+	}
+
+	public String toJson() {
+		return JsonUtils.toJson(this);
 	}
 }

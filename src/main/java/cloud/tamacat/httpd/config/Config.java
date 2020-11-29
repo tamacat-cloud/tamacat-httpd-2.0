@@ -1,40 +1,52 @@
 /*
- * Copyright (c) 2019 tamacat.org
+ * Copyright 2019 tamacat.org
+ * Licensed under the Apache License, Version 2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  */
 package cloud.tamacat.httpd.config;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.function.Function;
 
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonArrayBuilder;
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
-import javax.json.JsonReader;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 
-import cloud.tamacat.util.IOUtils;
 import cloud.tamacat.util.JsonUtils;
 import cloud.tamacat.util.StringUtils;
 
-public class Config {
+public class Config implements Serializable {
+	private final static long serialVersionUID = -7256101660692911262L;
 
+	@SerializedName("serverName")
+	@Expose
 	String serverName = "Httpd";
 
+	@SerializedName("host")
+	@Expose
 	String host;
 
 	String protocol = "http";
+	
+	@SerializedName("port")
+	@Expose
 	int port = 80;
 
+	@SerializedName("maxTotal")
+	@Expose
 	int maxTotal = 100;
+	
+	@SerializedName("maxPerRoute")
+	@Expose
 	int maxParRoute = 20;
 
+	@SerializedName("SoTimeout")
+	@Expose
 	int soTimeout = 60;
-	
-	String json;
-	
-	Collection<ServiceConfig> configs = new ArrayList<>();
+		
+	@SerializedName("services")
+	@Expose
+	Collection<ServiceConfig> services = new ArrayList<>();
 
 	public String getServerName() {
 		return serverName;
@@ -113,67 +125,26 @@ public class Config {
 		return this;
 	}
 
-	public Collection<ServiceConfig> getConfigs() {
-		return configs;
+	public Collection<ServiceConfig> getServices() {
+		return services;
+	}
+
+	public void setServices(Collection<ServiceConfig> services) {
+		this.services = services;
+	}
+
+	@Override
+	public String toString() {
+		return "Config [serverName=" + serverName + ", host=" + host + ", protocol=" + protocol + ", port=" + port
+				+ ", maxTotal=" + maxTotal + ", maxParRoute=" + maxParRoute + ", soTimeout=" + soTimeout + ", services="
+				+ services + "]";
 	}
 
 	public static Config load(String json) {
-		Function<JsonObject, ReverseConfig> parseReverseConfig = (arg) -> {
-			if (arg.containsKey("url")) {
-				return new ReverseConfig().url(arg.getString("url"));
-			}
-			return null;
-		};
-
-		Config config = new Config();
-		config.json = json;
-
-		JsonReader reader = Json.createReader(IOUtils.getInputStream(json));
-		JsonObject root = reader.readObject();
-
-		config.serverName(JsonUtils.getString.apply(root, "serverName"))
-			.host(JsonUtils.getString.apply(root, "host"))
-			.port(JsonUtils.getInt.apply(root, "port"))
-			.maxTotal(JsonUtils.getInt.apply(root, "maxTotal"))
-			.maxParRoute(JsonUtils.getInt.apply(root, "maxParRoute"))
-			.soTimeout(JsonUtils.getInt.apply(root, "soTimeout"));
-
-		JsonArray services = JsonUtils.getArray.apply(root, "services");
-		for (int i = 0; i < services.size(); i++) {
-			ServiceConfig serviceConfig = new ServiceConfig();
-			JsonObject service = services.getJsonObject(i);
-
-			serviceConfig.path = JsonUtils.getString.apply(service, "path");
-			serviceConfig.type = JsonUtils.getString.apply(service, "type");
-			serviceConfig.id = JsonUtils.getString.apply(service, "id");
-			serviceConfig.config = JsonUtils.getString.apply(service, "config");
-			serviceConfig.docsRoot = JsonUtils.getString.apply(service, "docsRoot");
-			
-			JsonObject reverseConfig = JsonUtils.getObject.apply(service, "reverse");
-			serviceConfig.reverse = parseReverseConfig.apply(reverseConfig);
-
-			JsonArray reverses = JsonUtils.getArray.apply(service, "reverses");
-			for (int j = 0; j < reverses.size(); j++) {
-				JsonObject reverse = reverses.getJsonObject(j);
-				serviceConfig.reverses.add(parseReverseConfig.apply(reverse));
-			}
-			config.configs.add(serviceConfig);
-		}
-		return config;
+		return JsonUtils.fromJsonInClasspath(json, Config.class);
 	}
 
-	public JsonObject toJson() {
-		JsonObjectBuilder json = Json.createObjectBuilder();
-		if (host != null)
-			json.add("host", host);
-		if (port > 0)
-			json.add("port", port);
-
-		JsonArrayBuilder services = Json.createArrayBuilder();
-		for (ServiceConfig config : configs) {
-			services.add(config.toJson());
-		}
-		json.add("services", services);
-		return json.build();
+	public String toJson() {
+		return JsonUtils.toJson(this);
 	}
 }

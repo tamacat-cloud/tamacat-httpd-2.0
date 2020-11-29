@@ -1,8 +1,8 @@
 Automatic-Module-Name: cloud.tamacat.httpd
 Implementation-Title: tamacat-httpd
-Implementation-Version: 2.0-alpha-20200503
+Implementation-Version: 2.0-alpha-20201129
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: cloud.tamacat.httpd
 Bundle-Name: tamacat-httpd
-Bundle-Vendor: tamacat.cloud
+Bundle-Vendor: TAMACAT.ORG
 Bundle-Version: 2.0

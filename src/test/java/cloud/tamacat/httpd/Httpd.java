@@ -7,7 +7,7 @@ public class Httpd {
 
 	public static void main(String[] args) throws Exception {
 		AsyncHttpd server = new AsyncHttpd();
-		server.startup();
+		server.startup(args);
 	}
 
 }

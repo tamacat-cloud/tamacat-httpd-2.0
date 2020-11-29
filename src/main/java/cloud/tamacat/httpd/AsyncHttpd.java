@@ -37,10 +37,16 @@ public class AsyncHttpd {
 
 	static final Log LOG = LogFactory.getLog(AsyncHttpd.class);
 
+	public static void main(String[] args) throws Exception {
+		AsyncHttpd server = new AsyncHttpd();
+		server.startup(args);
+	}
+	
 	protected String docsRoot;
 	
-	public void startup() throws Exception {
-		Config config = Config.load("service.json");
+	public void startup(String... args) throws Exception {
+		String json = args.length>=1 ? args[0] : "service.json";
+		Config config = Config.load(json);
 
 		IOReactorConfig reactor = IOReactorConfig.custom()
 			.setSoTimeout(config.getSoTimeout(), TimeUnit.SECONDS).build();
@@ -88,7 +94,7 @@ public class AsyncHttpd {
 	}
 	
 	protected HttpAsyncServer createHttpAsyncServer(Config config, IOReactorConfig reactor, HttpAsyncRequester requester) {
-		Collection<ServiceConfig> configs = config.getConfigs();
+		Collection<ServiceConfig> configs = config.getServices();
 
 		AsyncServerBootstrap bootstrap = AsyncServerBootstrap.bootstrap()
 			.setHttpProcessor(HttpProcessors.customServer(config.getServerName()).build())
