@@ -60,9 +60,9 @@ import cloud.tamacat.log.LogFactory;
  * @see
  * https://hc.apache.org/httpcomponents-core-5.0.x/httpcore5/examples/AsyncReverseProxyExample.java
  */
-public class AsyncReverseProxy {
+public class ReverseProxy {
 
-	static final Log LOG = LogFactory.getLog(AsyncReverseProxy.class);
+	static final Log LOG = LogFactory.getLog(ReverseProxy.class);
 	static int maxTotal = 100;
 	static int defaultMaxPerRoute = 20;
 	

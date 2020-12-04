@@ -6,7 +6,7 @@
   </appender>
 
   <logger name="Access" level="INFO"/>
-  <logger name="cloud.tamacat" level="TRACE"/>
+  <logger name="cloud.tamacat" level="DEBUG"/>
   <logger name="org.thymeleaf" level="WARN" />
   <logger name="org" level="DEBUG"/>
   <logger name="com" level="INFO"/>

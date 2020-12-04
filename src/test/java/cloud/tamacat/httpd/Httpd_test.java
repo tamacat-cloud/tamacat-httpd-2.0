@@ -3,10 +3,10 @@
  */
 package cloud.tamacat.httpd;
 
-public class Httpd {
+public class Httpd_test {
 
 	public static void main(String[] args) throws Exception {
-		AsyncHttpd server = new AsyncHttpd();
+		Httpd server = new Httpd();
 		server.startup(args);
 	}
 

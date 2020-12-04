@@ -1,15 +1,19 @@
 /*
- * Copyright (c) 2019 tamacat.org
+ * Copyright 2019 tamacat.org
+ * Licensed under the Apache License, Version 2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  */
 package cloud.tamacat.httpd.config;
 
 import java.util.Collection;
+import java.util.Map;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 import cloud.tamacat.util.CollectionUtils;
 import cloud.tamacat.util.JsonUtils;
+import cloud.tamacat.util.StringUtils;
 
 public class ServiceConfig {
 	
@@ -39,12 +43,16 @@ public class ServiceConfig {
 	
 	@SerializedName("reverse")
 	@Expose
-	ReverseConfig reverse;
+	ReverseConfig reverse = new ReverseConfig();
 	
 	@SerializedName("reverses")
 	@Expose
 	Collection<ReverseConfig> reverses = CollectionUtils.newArrayList();
 	
+	@SerializedName("filters")
+	@Expose
+	Map<String, FilterConfig> filters = CollectionUtils.newLinkedHashMap();
+
 	public String getPath() {
 		return path;
 	}
@@ -99,6 +107,11 @@ public class ServiceConfig {
 		return this;
 	}
 
+	public boolean isReverseProxy() {
+		return "reverse".equals(type) 
+			&& (reverses.size()>=1 || (reverse != null && StringUtils.isNotEmpty(reverse.getUrl())));
+	}
+	
 	public ReverseConfig getReverse() {
 		return reverse;
 	}
@@ -114,6 +127,19 @@ public class ServiceConfig {
 
 	public ServiceConfig reverses(Collection<ReverseConfig> reverses) {
 		this.reverses = reverses;
+		return this;
+	}
+	
+	public Map<String, FilterConfig> getFilters() {
+		return filters;
+	}
+
+	public void setFilters(Map<String, FilterConfig> filters) {
+		this.filters = filters;
+	}
+	
+	public ServiceConfig filters(Map<String, FilterConfig> filters) {
+		setFilters(filters);
 		return this;
 	}
 	

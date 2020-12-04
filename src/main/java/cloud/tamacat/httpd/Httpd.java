@@ -1,5 +1,7 @@
 /*
- * Copyright (c) 2019 tamacat.org
+ * Copyright 2019 tamacat.org
+ * Licensed under the Apache License, Version 2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  */
 package cloud.tamacat.httpd;
 
@@ -33,12 +35,12 @@ import cloud.tamacat.log.LogFactory;
  * Asynchronous embedded HTTP/1.1 server.
  * configration: service.json
  */
-public class AsyncHttpd {
+public class Httpd {
 
-	static final Log LOG = LogFactory.getLog(AsyncHttpd.class);
+	static final Log LOG = LogFactory.getLog(Httpd.class);
 
 	public static void main(String[] args) throws Exception {
-		AsyncHttpd server = new AsyncHttpd();
+		Httpd server = new Httpd();
 		server.startup(args);
 	}
 	
@@ -102,13 +104,18 @@ public class AsyncHttpd {
 			.setStreamListener(new TraceHttp1StreamListener("client<-httpd"));
 
 		for (ServiceConfig serviceConfig : configs) {
-			if ("reverse".equals(serviceConfig.getType())) {
+			if (serviceConfig.isReverseProxy()) {
 				registerReverseProxy(serviceConfig, bootstrap, requester);
 			} else {
 				registerFileServer(serviceConfig, bootstrap, requester);
 			}
+			
+			//add filter
+			serviceConfig.getFilters().forEach((id, filter)->{
+				bootstrap.addFilterFirst(id, filter.getFilter(serviceConfig));
+			});
 		}
-		
+				
 		HttpAsyncServer server = bootstrap.create();
 		return server;
 	}

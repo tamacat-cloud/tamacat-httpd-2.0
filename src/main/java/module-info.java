@@ -1,7 +1,13 @@
+/*
+ * Copyright 2020 tamacat.org
+ * Licensed under the Apache License, Version 2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
+ */
 module cloud.tamacat.httpd {
 	
 	exports cloud.tamacat.httpd;
 	exports cloud.tamacat.httpd.core;
+	exports cloud.tamacat.httpd.filter;
 	exports cloud.tamacat.httpd.reverse;
 	exports cloud.tamacat.httpd.web;
 	exports cloud.tamacat.httpd.config;
@@ -10,6 +16,7 @@ module cloud.tamacat.httpd {
 	opens cloud.tamacat.httpd.core;
 	opens cloud.tamacat.httpd.config;
 	opens cloud.tamacat.httpd.reverse.handler;
+	opens cloud.tamacat.httpd.filter;
 	opens cloud.tamacat.httpd.web.handler;
 	
 	requires transitive org.apache.httpcomponents.core5.httpcore5;
