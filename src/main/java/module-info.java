@@ -11,6 +11,7 @@ module cloud.tamacat.httpd {
 	exports cloud.tamacat.httpd.reverse;
 	exports cloud.tamacat.httpd.web;
 	exports cloud.tamacat.httpd.config;
+	exports cloud.tamacat.httpd.tls;
 
 	opens cloud.tamacat.httpd;
 	opens cloud.tamacat.httpd.core;
@@ -18,6 +19,7 @@ module cloud.tamacat.httpd {
 	opens cloud.tamacat.httpd.reverse.handler;
 	opens cloud.tamacat.httpd.filter;
 	opens cloud.tamacat.httpd.web.handler;
+	opens cloud.tamacat.httpd.tls;
 	
 	requires transitive org.apache.httpcomponents.core5.httpcore5;
 	requires transitive org.apache.httpcomponents.core5.httpcore5.h2;

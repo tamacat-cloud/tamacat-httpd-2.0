@@ -5,21 +5,28 @@
  */
 package cloud.tamacat.httpd.config;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import org.junit.jupiter.api.Test;
 
+import cloud.tamacat.log.Log;
+import cloud.tamacat.log.LogFactory;
 import cloud.tamacat.util.JsonUtils;
 
 public class FilterConfigTest {
+	
+	static final Log LOG = LogFactory.getLog(FilterConfigTest.class);
 
 	@Test
 	public void testLoad() {
 		Config config = Config.load("service.json");
-		System.out.println(JsonUtils.stringify(config));
+		LOG.trace(JsonUtils.stringify(config));
 		
+		assertEquals(4, config.getServices().size());
 		for (ServiceConfig service : config.getServices()) {
-			
+			LOG.trace(JsonUtils.stringify(service));
 			service.getFilters().forEach((id, filter) -> {
-				System.out.println(id+"="+filter.getFilter(service));
+				LOG.trace(id+"="+filter.getFilter(service));
 			});
 		}
 	}

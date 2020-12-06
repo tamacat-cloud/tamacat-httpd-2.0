@@ -11,12 +11,15 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.hc.core5.function.Supplier;
 import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.http.config.Http1Config;
 import org.apache.hc.core5.http.impl.HttpProcessors;
 import org.apache.hc.core5.http.impl.bootstrap.AsyncRequesterBootstrap;
 import org.apache.hc.core5.http.impl.bootstrap.AsyncServerBootstrap;
 import org.apache.hc.core5.http.impl.bootstrap.HttpAsyncRequester;
 import org.apache.hc.core5.http.impl.bootstrap.HttpAsyncServer;
 import org.apache.hc.core5.http.nio.AsyncServerExchangeHandler;
+import org.apache.hc.core5.http.nio.ssl.BasicServerTlsStrategy;
+import org.apache.hc.core5.http.nio.ssl.FixedPortStrategy;
 import org.apache.hc.core5.io.CloseMode;
 import org.apache.hc.core5.reactor.IOReactorConfig;
 import org.apache.hc.core5.util.TimeValue;
@@ -26,7 +29,7 @@ import cloud.tamacat.httpd.config.ServiceConfig;
 import cloud.tamacat.httpd.listener.TraceConnPoolListener;
 import cloud.tamacat.httpd.listener.TraceHttp1StreamListener;
 import cloud.tamacat.httpd.reverse.handler.IncomingExchangeHandler;
-import cloud.tamacat.httpd.util.ServerUtils;
+import cloud.tamacat.httpd.tls.SSLSNIContextCreator;
 import cloud.tamacat.httpd.web.handler.AsyncFileServerRequestHandler;
 import cloud.tamacat.log.Log;
 import cloud.tamacat.log.LogFactory;
@@ -43,9 +46,7 @@ public class Httpd {
 		Httpd server = new Httpd();
 		server.startup(args);
 	}
-	
-	protected String docsRoot;
-	
+		
 	public void startup(String... args) throws Exception {
 		String json = args.length>=1 ? args[0] : "service.json";
 		Config config = Config.load(json);
@@ -75,24 +76,18 @@ public class Httpd {
 
 		server.awaitShutdown(TimeValue.MAX_VALUE);
 	}
-
-	/**
-	 * <p>Set the path of document root.
-	 * @param docsRoot
-	 */
-	public void setDocsRoot(String docsRoot) {
-		this.docsRoot = ServerUtils.getServerDocsRoot(docsRoot);
-	}
 	
 	protected HttpAsyncRequester createHttpAsyncRequester(Config config, IOReactorConfig reactor) {
-		HttpAsyncRequester requester = AsyncRequesterBootstrap.bootstrap()
+		Http1Config http1config = Http1Config.custom().build();
+		
+		AsyncRequesterBootstrap bootstrap = AsyncRequesterBootstrap.bootstrap()
+			.setHttp1Config(http1config)
 			.setIOReactorConfig(reactor)
 			.setConnPoolListener(new TraceConnPoolListener())
 			.setStreamListener(new TraceHttp1StreamListener())
 			.setMaxTotal(config.getMaxTotal())
-			.setDefaultMaxPerRoute(config.getMaxParRoute())
-			.create();
-		return requester;
+			.setDefaultMaxPerRoute(config.getMaxParRoute());
+		return bootstrap.create();
 	}
 	
 	protected HttpAsyncServer createHttpAsyncServer(Config config, IOReactorConfig reactor, HttpAsyncRequester requester) {
@@ -103,6 +98,13 @@ public class Httpd {
 			.setIOReactorConfig(reactor)
 			.setStreamListener(new TraceHttp1StreamListener("client<-httpd"));
 
+		if (config.useHttps()) {
+			bootstrap.setTlsStrategy(
+				new BasicServerTlsStrategy(new SSLSNIContextCreator(config).getSSLContext(), 
+				new FixedPortStrategy(config.getPort()))
+			);
+		}
+		
 		for (ServiceConfig serviceConfig : configs) {
 			if (serviceConfig.isReverseProxy()) {
 				registerReverseProxy(serviceConfig, bootstrap, requester);

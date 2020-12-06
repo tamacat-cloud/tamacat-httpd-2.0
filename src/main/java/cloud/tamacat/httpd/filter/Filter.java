@@ -15,9 +15,11 @@ import cloud.tamacat.httpd.config.ServiceConfig;
 public abstract class Filter implements AsyncFilterHandler {
 
 	protected ServiceConfig serviceConfig;
+	protected String path;
 	
 	public void setServerConfig(ServiceConfig serviceConfig) {
 		this.serviceConfig = serviceConfig;
+		this.path = serviceConfig.getPath();
 	}
 	
 	public Filter serverConfig(ServiceConfig serviceConfig) {

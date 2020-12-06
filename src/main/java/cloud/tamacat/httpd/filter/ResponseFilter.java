@@ -88,4 +88,8 @@ public class ResponseFilter extends Filter {
 		});
 	}
 
+	@Override
+	public String toString() {
+		return "ResponseFilter [appendResponseHeaders=" + appendResponseHeaders + ", path=" + path + "]";
+	}
 }

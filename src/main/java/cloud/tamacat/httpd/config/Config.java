@@ -47,7 +47,11 @@ public class Config implements Serializable {
 	@SerializedName("services")
 	@Expose
 	Collection<ServiceConfig> services = new ArrayList<>();
-
+	
+	@SerializedName("https")
+	@Expose
+	HttpsConig httpsConfig;
+	
 	public String getServerName() {
 		return serverName;
 	}
@@ -64,6 +68,14 @@ public class Config implements Serializable {
 		return protocol;
 	}
 
+	public boolean useHttps() {
+		return "https".equals(protocol);
+	}
+	
+	public HttpsConig getHttpsConfig() {
+		return httpsConfig;
+	}
+	
 	public int getMaxTotal() {
 		return maxTotal;
 	}
