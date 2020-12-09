@@ -30,7 +30,8 @@ import cloud.tamacat.httpd.listener.TraceConnPoolListener;
 import cloud.tamacat.httpd.listener.TraceHttp1StreamListener;
 import cloud.tamacat.httpd.reverse.handler.IncomingExchangeHandler;
 import cloud.tamacat.httpd.tls.SSLSNIContextCreator;
-import cloud.tamacat.httpd.web.handler.AsyncFileServerRequestHandler;
+import cloud.tamacat.httpd.web.handler.FileServerRequestHandler;
+import cloud.tamacat.httpd.web.handler.ThymeleafServerRequestHandler;
 import cloud.tamacat.log.Log;
 import cloud.tamacat.log.LogFactory;
 
@@ -98,6 +99,7 @@ public class Httpd {
 			.setIOReactorConfig(reactor)
 			.setStreamListener(new TraceHttp1StreamListener("client<-httpd"));
 
+		//HTTPS
 		if (config.useHttps()) {
 			bootstrap.setTlsStrategy(
 				new BasicServerTlsStrategy(new SSLSNIContextCreator(config).getSSLContext(), 
@@ -108,6 +110,8 @@ public class Httpd {
 		for (ServiceConfig serviceConfig : configs) {
 			if (serviceConfig.isReverseProxy()) {
 				registerReverseProxy(serviceConfig, bootstrap, requester);
+			} else if ("thymeleaf".equals(serviceConfig.getType())) {
+				registerThymeleafServer(serviceConfig, bootstrap, requester);
 			} else {
 				registerFileServer(serviceConfig, bootstrap, requester);
 			}
@@ -124,7 +128,16 @@ public class Httpd {
 	
 	protected void registerFileServer(ServiceConfig serviceConfig, AsyncServerBootstrap bootstrap, HttpAsyncRequester requester) {
 		try {
-			bootstrap.register(serviceConfig.getPath() + "*", new AsyncFileServerRequestHandler(serviceConfig));
+			bootstrap.register(serviceConfig.getPath() + "*", new FileServerRequestHandler(serviceConfig));
+		} catch (Exception e) {
+			e.printStackTrace();
+			LOG.error(e.getMessage(), e);
+		}
+	}
+
+	protected void registerThymeleafServer(ServiceConfig serviceConfig, AsyncServerBootstrap bootstrap, HttpAsyncRequester requester) {
+		try {
+			bootstrap.register(serviceConfig.getPath() + "*", new ThymeleafServerRequestHandler(serviceConfig));
 		} catch (Exception e) {
 			e.printStackTrace();
 			LOG.error(e.getMessage(), e);

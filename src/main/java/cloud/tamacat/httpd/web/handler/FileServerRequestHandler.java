@@ -66,10 +66,10 @@ import cloud.tamacat.util.StringUtils;
  * 
  * @see https://hc.apache.org/httpcomponents-core-5.0.x/httpcore5/examples/AsyncFileServerExample.java
  */
-public class AsyncFileServerRequestHandler implements AsyncServerRequestHandler<Message<HttpRequest, Void>> {
+public class FileServerRequestHandler implements AsyncServerRequestHandler<Message<HttpRequest, Void>> {
 
 	static final Log ACCESS = LogFactory.getLog("Access");
-	static final Log LOG = LogFactory.getLog(AsyncFileServerRequestHandler.class);
+	static final Log LOG = LogFactory.getLog(FileServerRequestHandler.class);
 	
 	protected ClassLoader loader;
 	protected ThymeleafErrorPage errorPage;
@@ -78,11 +78,11 @@ public class AsyncFileServerRequestHandler implements AsyncServerRequestHandler<
 
 	protected File docsRoot;
 
-	public AsyncFileServerRequestHandler(ServiceConfig serviceConfig) {
+	public FileServerRequestHandler(ServiceConfig serviceConfig) {
 		this(new File(serviceConfig.getDocsRoot()));
 	}
 
-	public AsyncFileServerRequestHandler(File docsRoot) {
+	public FileServerRequestHandler(File docsRoot) {
 		this.docsRoot = docsRoot;
 		Properties props = new Properties();
 		try {

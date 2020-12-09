@@ -38,7 +38,7 @@ import org.apache.hc.core5.reactor.IOReactorConfig;
 import org.apache.hc.core5.reactor.ListenerEndpoint;
 import org.apache.hc.core5.util.TimeValue;
 
-import cloud.tamacat.httpd.web.handler.AsyncFileServerRequestHandler;
+import cloud.tamacat.httpd.web.handler.FileServerRequestHandler;
 import cloud.tamacat.log.Log;
 import cloud.tamacat.log.LogFactory;
 
@@ -65,7 +65,7 @@ public class AsyncFileServer {
 		final IOReactorConfig config = IOReactorConfig.custom().setSoTimeout(15, TimeUnit.SECONDS).setTcpNoDelay(true).build();
 
 		final HttpAsyncServer server = AsyncServerBootstrap.bootstrap().setIOReactorConfig(config)
-				.register("*", new AsyncFileServerRequestHandler(docsRoot)).create();
+				.register("*", new FileServerRequestHandler(docsRoot)).create();
 
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override

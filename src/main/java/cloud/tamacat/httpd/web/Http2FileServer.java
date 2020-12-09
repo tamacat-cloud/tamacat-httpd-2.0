@@ -43,7 +43,7 @@ import org.apache.hc.core5.reactor.IOReactorConfig;
 import org.apache.hc.core5.reactor.ListenerEndpoint;
 import org.apache.hc.core5.util.TimeValue;
 
-import cloud.tamacat.httpd.web.handler.AsyncFileServerRequestHandler;
+import cloud.tamacat.httpd.web.handler.FileServerRequestHandler;
 import cloud.tamacat.log.Log;
 import cloud.tamacat.log.LogFactory;
 
@@ -106,7 +106,7 @@ public class Http2FileServer {
                     }
 
                 })
-                .register("*", new AsyncFileServerRequestHandler(docsRoot))
+                .register("*", new FileServerRequestHandler(docsRoot))
                 .create();
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
