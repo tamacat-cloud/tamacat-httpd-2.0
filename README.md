@@ -8,7 +8,7 @@ This is a customizable HTTP/HTTPS Server framework.
 ### Features:
 - Standards based, pure Java HTTP Server, implementation of HTTP versions 1.0 and 1.1
 - Pluggable architecture for custom request/response handler and filters
-- It provides a default handler: Reverse Proxy, Velocity Page and Static Contents Web Server
+- It provides a default handler: Reverse Proxy, Thymeleaf Page and Static Contents Web Server
 - Required Java Platform, Standard Edition 11 (JRE/JDK)
 
 ### License:
