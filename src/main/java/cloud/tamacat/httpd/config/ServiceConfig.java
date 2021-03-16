@@ -5,6 +5,8 @@
  */
 package cloud.tamacat.httpd.config;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Collection;
 import java.util.Map;
 
@@ -17,6 +19,10 @@ import cloud.tamacat.util.StringUtils;
 
 public class ServiceConfig {
 	
+	@SerializedName("host")
+	@Expose
+	String host;
+
 	@SerializedName("path")
 	@Expose
 	String path;
@@ -53,6 +59,33 @@ public class ServiceConfig {
 	@Expose
 	Map<String, FilterConfig> filters = CollectionUtils.newLinkedHashMap();
 
+	protected ServerConfig serverConfig;
+	
+	public void setServerConfig(ServerConfig serverConfig) {
+		this.serverConfig = serverConfig;
+	}
+	
+	public ServerConfig getServerConfig() {
+		return serverConfig;
+	}
+	
+	public URL getHost() {
+		try {
+			return new URL(host);
+		} catch (MalformedURLException e) {
+			return null;
+		}
+	}
+
+	public void setHost(String host) {
+		this.host = host;
+	}
+	
+	public ServiceConfig host(String host) {
+		setHost(host);
+		return this;
+	}
+	
 	public String getPath() {
 		return path;
 	}
@@ -145,7 +178,7 @@ public class ServiceConfig {
 	
 	@Override
 	public String toString() {
-		return "ServiceConfig [path=" + path + ", type=" + type + ", id=" + id + ", config=" + config + ", handler="
+		return "ServiceConfig [host=" + host + ", path=" + path + ", type=" + type + ", id=" + id + ", config=" + config + ", handler="
 				+ handler + ", docsRoot=" + docsRoot + ", reverse=" + reverse + ", reverses=" + reverses + "]";
 	}
 

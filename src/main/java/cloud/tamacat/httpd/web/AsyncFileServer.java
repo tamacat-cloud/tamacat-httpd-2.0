@@ -31,6 +31,7 @@ import java.net.InetSocketAddress;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.hc.core5.http.URIScheme;
 import org.apache.hc.core5.http.impl.bootstrap.AsyncServerBootstrap;
 import org.apache.hc.core5.http.impl.bootstrap.HttpAsyncServer;
 import org.apache.hc.core5.io.CloseMode;
@@ -76,7 +77,7 @@ public class AsyncFileServer {
 		});
 
 		server.start();
-		final Future<ListenerEndpoint> future = server.listen(new InetSocketAddress(port));
+		final Future<ListenerEndpoint> future = server.listen(new InetSocketAddress(port), URIScheme.HTTP);
 		final ListenerEndpoint listenerEndpoint = future.get();
 		LOG.info("Listening on " + listenerEndpoint.getAddress());
 		server.awaitShutdown(TimeValue.MAX_VALUE);

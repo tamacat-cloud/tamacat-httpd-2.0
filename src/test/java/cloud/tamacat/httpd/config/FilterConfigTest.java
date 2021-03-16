@@ -19,7 +19,7 @@ public class FilterConfigTest {
 
 	@Test
 	public void testLoad() {
-		Config config = Config.load("service.json");
+		ServerConfig config = ServerConfig.load("service.json");
 		LOG.trace(JsonUtils.stringify(config));
 		
 		assertEquals(4, config.getServices().size());

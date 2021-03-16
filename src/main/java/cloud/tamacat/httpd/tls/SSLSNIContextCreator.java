@@ -15,7 +15,7 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.X509ExtendedKeyManager;
 
-import cloud.tamacat.httpd.config.Config;
+import cloud.tamacat.httpd.config.ServerConfig;
 import cloud.tamacat.log.Log;
 import cloud.tamacat.log.LogFactory;
 import cloud.tamacat.util.ClassUtils;
@@ -37,12 +37,12 @@ public class SSLSNIContextCreator extends DefaultSSLContextCreator {
 
 	public SSLSNIContextCreator() {}
 
-	public SSLSNIContextCreator(Config serverConfig) {
+	public SSLSNIContextCreator(ServerConfig serverConfig) {
 		super(serverConfig);
 	}
 
 	@Override
-	public void setServerConfig(Config serverConfig) {
+	public void setServerConfig(ServerConfig serverConfig) {
 		super.setServerConfig(serverConfig);
 		setDefaultAlias(serverConfig.getHttpsConfig().getDefaultAlias());
 	}

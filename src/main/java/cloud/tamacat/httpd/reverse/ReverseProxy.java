@@ -48,7 +48,7 @@ import org.apache.hc.core5.pool.PoolStats;
 import org.apache.hc.core5.reactor.IOReactorConfig;
 import org.apache.hc.core5.util.TimeValue;
 
-import cloud.tamacat.httpd.config.Config;
+import cloud.tamacat.httpd.config.ServerConfig;
 import cloud.tamacat.httpd.config.ServiceConfig;
 import cloud.tamacat.httpd.reverse.handler.IncomingExchangeHandler;
 import cloud.tamacat.log.Log;
@@ -67,7 +67,7 @@ public class ReverseProxy {
 	static int defaultMaxPerRoute = 20;
 	
 	public void startup() throws Exception {
-		Config config = Config.load("service.json");
+		ServerConfig config = ServerConfig.load("service.json");
 		
 		Collection<ServiceConfig> configs = config.getServices();
 		ServiceConfig serviceConfig = configs.iterator().next();
@@ -169,7 +169,7 @@ public class ReverseProxy {
 
 		requester.start();
 		server.start();
-		server.listen(new InetSocketAddress(port));
+		server.listen(new InetSocketAddress(port), config.getURIScheme());
 		LOG.info("Listening on port " + port);
 
 		server.awaitShutdown(TimeValue.MAX_VALUE);

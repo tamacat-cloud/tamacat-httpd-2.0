@@ -14,7 +14,7 @@ import javax.net.ssl.SSLContext;
 
 import org.apache.hc.core5.http.ssl.TLS;
 
-import cloud.tamacat.httpd.config.Config;
+import cloud.tamacat.httpd.config.ServerConfig;
 import cloud.tamacat.util.ClassUtils;
 import cloud.tamacat.util.RuntimeIOException;
 
@@ -48,11 +48,11 @@ public class DefaultSSLContextCreator implements SSLContextCreator {
 	 * <p>
 	 * The constructor of setting values from {@code ServerConfig}.
 	 */
-	public DefaultSSLContextCreator(Config serverConfig) {
+	public DefaultSSLContextCreator(ServerConfig serverConfig) {
 		setServerConfig(serverConfig);
 	}
 
-	public void setServerConfig(Config serverConfig) {
+	public void setServerConfig(ServerConfig serverConfig) {
 		setKeyStoreFile(serverConfig.getHttpsConfig().getKeyStoreFile());
 		setKeyPassword(serverConfig.getHttpsConfig().getKeyPassword());
 		setKeyStoreType(serverConfig.getHttpsConfig().getKeyStoreType());

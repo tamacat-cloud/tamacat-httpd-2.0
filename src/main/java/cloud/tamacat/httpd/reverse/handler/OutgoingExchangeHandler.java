@@ -169,6 +169,8 @@ public class OutgoingExchangeHandler implements AsyncClientExchangeHandler {
 			for (final Iterator<Header> it = incomingResponse.headerIterator(); it.hasNext();) {
 				final Header header = it.next();
 				if (!HOP_BY_HOP.contains(header.getName().toLowerCase(Locale.ROOT))) {
+					//TODO Header convert
+					LOG.trace("[proxy<-origin] header "+header);
 					outgoingResponse.addHeader(header);
 				}
 			}
@@ -212,6 +214,11 @@ public class OutgoingExchangeHandler implements AsyncClientExchangeHandler {
 			if (LOG.isTraceEnabled()) {
 				LOG.trace("[proxy<-origin] " + exchangeState.id + " " + src.remaining() + " bytes received");
 			}
+			
+			//TODO HTML convert
+			//LOG.trace("[proxy<-origin] Content-Type: "+exchangeState.response.getFirstHeader(HttpHeaders.CONTENT_TYPE));
+			//LOG.trace("[proxy<-origin] "+ new String(src.array()));
+			
 			final DataStreamChannel dataChannel = exchangeState.responseDataChannel;
 			if (dataChannel != null && exchangeState.outBuf != null) {
 				if (exchangeState.outBuf.hasData()) {

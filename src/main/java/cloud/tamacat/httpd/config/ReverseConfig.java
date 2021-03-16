@@ -23,6 +23,20 @@ public class ReverseConfig {
 	
 	HttpHost target;
 	
+	ServiceConfig serviceConfig;
+	
+	private URL host;
+	private URL reverseUrl;
+
+	
+	public void setServiceConfig(ServiceConfig serviceConfig) {
+		this.serviceConfig = serviceConfig;
+	}
+	
+	public ServiceConfig getServiceConfig() {
+		return serviceConfig;
+	}
+	
 	public void setUrl(String url) {
 		try {
 			URL targetUrl = new URL(url);
@@ -46,6 +60,54 @@ public class ReverseConfig {
 			setUrl(this.url);
 		}
 		return target;
+	}
+	
+	public URL getHost() {
+		return host;
+	}
+	
+	public void setHost(URL host) {
+		if (host != null) {
+			try {
+				this.host = new URL(host.getProtocol(), host.getHost(), host.getPort(), "");
+			} catch (MalformedURLException e) {
+			}
+		}
+	}
+
+	public URL getReverse() {
+		return reverseUrl;
+	}
+	
+	public URL getReverseUrl(String path) {
+		String p = serviceConfig.getPath();
+		if (path != null && p != null && path.startsWith(p)) {
+			String distUrl = path.replaceFirst(serviceConfig.getPath(), reverseUrl.getPath());
+			try {
+				int port = reverseUrl.getPort();
+				if (port == -1) {
+					port = reverseUrl.getDefaultPort();
+				}
+				return new URL(reverseUrl.getProtocol(), reverseUrl.getHost(), port, distUrl);
+			} catch (MalformedURLException e) {
+			}
+		}
+		return null;
+	}
+	
+	/**
+	 * path: http://localhost:8080/examples/servlet
+	 *   =>  http://localhost/examples2/servlet
+	 */
+	public String getConvertRequestedUrl(String path) {
+		URL host = getHost(); // requested URL (path is deleted)
+		if (path != null && host != null) {
+			return path.replaceFirst(
+				reverseUrl.getProtocol() + "://" + reverseUrl.getAuthority(), host.toString())
+					.replace(reverseUrl.getPath(), getServiceConfig().getPath());
+		} else {
+			return path;
+		}
 	}
 	
 	public String toJson() {

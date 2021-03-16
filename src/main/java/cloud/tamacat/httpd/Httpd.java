@@ -19,12 +19,11 @@ import org.apache.hc.core5.http.impl.bootstrap.HttpAsyncRequester;
 import org.apache.hc.core5.http.impl.bootstrap.HttpAsyncServer;
 import org.apache.hc.core5.http.nio.AsyncServerExchangeHandler;
 import org.apache.hc.core5.http.nio.ssl.BasicServerTlsStrategy;
-import org.apache.hc.core5.http.nio.ssl.FixedPortStrategy;
 import org.apache.hc.core5.io.CloseMode;
 import org.apache.hc.core5.reactor.IOReactorConfig;
 import org.apache.hc.core5.util.TimeValue;
 
-import cloud.tamacat.httpd.config.Config;
+import cloud.tamacat.httpd.config.ServerConfig;
 import cloud.tamacat.httpd.config.ServiceConfig;
 import cloud.tamacat.httpd.listener.TraceConnPoolListener;
 import cloud.tamacat.httpd.listener.TraceHttp1StreamListener;
@@ -50,7 +49,7 @@ public class Httpd {
 		
 	public void startup(String... args) throws Exception {
 		String json = args.length>=1 ? args[0] : "service.json";
-		Config config = Config.load(json);
+		ServerConfig config = ServerConfig.load(json);
 
 		IOReactorConfig reactor = IOReactorConfig.custom()
 			.setSoTimeout(config.getSoTimeout(), TimeUnit.SECONDS).build();
@@ -72,13 +71,13 @@ public class Httpd {
 		requester.start();
 		server.start();
 
-		server.listen(new InetSocketAddress(port));
+		server.listen(new InetSocketAddress(port), config.getURIScheme());
 		LOG.info("Listening on port " + port);
 
 		server.awaitShutdown(TimeValue.MAX_VALUE);
 	}
 	
-	protected HttpAsyncRequester createHttpAsyncRequester(Config config, IOReactorConfig reactor) {
+	protected HttpAsyncRequester createHttpAsyncRequester(ServerConfig config, IOReactorConfig reactor) {
 		Http1Config http1config = Http1Config.custom().build();
 		
 		AsyncRequesterBootstrap bootstrap = AsyncRequesterBootstrap.bootstrap()
@@ -91,7 +90,7 @@ public class Httpd {
 		return bootstrap.create();
 	}
 	
-	protected HttpAsyncServer createHttpAsyncServer(Config config, IOReactorConfig reactor, HttpAsyncRequester requester) {
+	protected HttpAsyncServer createHttpAsyncServer(ServerConfig config, IOReactorConfig reactor, HttpAsyncRequester requester) {
 		Collection<ServiceConfig> configs = config.getServices();
 
 		AsyncServerBootstrap bootstrap = AsyncServerBootstrap.bootstrap()
@@ -102,12 +101,13 @@ public class Httpd {
 		//HTTPS
 		if (config.useHttps()) {
 			bootstrap.setTlsStrategy(
-				new BasicServerTlsStrategy(new SSLSNIContextCreator(config).getSSLContext(), 
-				new FixedPortStrategy(config.getPort()))
+				new BasicServerTlsStrategy(new SSLSNIContextCreator(config).getSSLContext())
 			);
 		}
 		
 		for (ServiceConfig serviceConfig : configs) {
+			serviceConfig.setServerConfig(config);
+			
 			if (serviceConfig.isReverseProxy()) {
 				registerReverseProxy(serviceConfig, bootstrap, requester);
 			} else if ("thymeleaf".equals(serviceConfig.getType())) {

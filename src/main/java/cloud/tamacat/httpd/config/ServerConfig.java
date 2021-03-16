@@ -9,13 +9,15 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.apache.hc.core5.http.URIScheme;
+
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 import cloud.tamacat.util.JsonUtils;
 import cloud.tamacat.util.StringUtils;
 
-public class Config implements Serializable {
+public class ServerConfig implements Serializable {
 	private final static long serialVersionUID = -7256101660692911262L;
 
 	@SerializedName("serverName")
@@ -67,9 +69,13 @@ public class Config implements Serializable {
 	public String getProtocol() {
 		return protocol;
 	}
+	
+	public URIScheme getURIScheme() {
+		return URIScheme.valueOf(getProtocol().toUpperCase());
+	}
 
 	public boolean useHttps() {
-		return "https".equals(protocol);
+		return "https".equalsIgnoreCase(protocol);
 	}
 	
 	public HttpsConig getHttpsConfig() {
@@ -88,49 +94,49 @@ public class Config implements Serializable {
 		return soTimeout;
 	}
 
-	public Config host(String host) {
+	public ServerConfig host(String host) {
 		if (StringUtils.isNotEmpty(host)) {
 			this.host = host;
 		}
 		return this;
 	}
-
-	public Config protocol(String protocol) {
+	
+	public ServerConfig protocol(String protocol) {
 		if (StringUtils.isNotEmpty(protocol)) {
 			this.protocol = protocol;
 		}
 		return this;
 	}
 
-	public Config port(Integer port) {
+	public ServerConfig port(Integer port) {
 		if (port != null) {
 			this.port = port.intValue();
 		}
 		return this;
 	}
 
-	public Config serverName(String serverName) {
+	public ServerConfig serverName(String serverName) {
 		if (StringUtils.isNotEmpty(serverName)) {
 			this.serverName = serverName;
 		}
 		return this;
 	}
 
-	public Config maxTotal(Integer maxTotal) {
+	public ServerConfig maxTotal(Integer maxTotal) {
 		if (maxTotal != null) {
 			this.maxTotal = maxTotal.intValue();
 		}
 		return this;
 	}
 
-	public Config maxParRoute(Integer maxParRoute) {
+	public ServerConfig maxParRoute(Integer maxParRoute) {
 		if (maxParRoute != null) {
 			this.maxParRoute = maxParRoute.intValue();
 		}
 		return this;
 	}
 	
-	public Config soTimeout(Integer soTimeout) {
+	public ServerConfig soTimeout(Integer soTimeout) {
 		if (soTimeout != null) {
 			this.soTimeout = soTimeout.intValue();
 		}
@@ -147,13 +153,13 @@ public class Config implements Serializable {
 
 	@Override
 	public String toString() {
-		return "Config [serverName=" + serverName + ", host=" + host + ", protocol=" + protocol + ", port=" + port
+		return "ServerConfig [serverName=" + serverName + ", host=" + host + ", protocol=" + protocol + ", port=" + port
 				+ ", maxTotal=" + maxTotal + ", maxParRoute=" + maxParRoute + ", soTimeout=" + soTimeout + ", services="
 				+ services + "]";
 	}
 
-	public static Config load(String json) {
-		return JsonUtils.fromJsonInClasspath(json, Config.class);
+	public static ServerConfig load(String json) {
+		return JsonUtils.fromJsonInClasspath(json, ServerConfig.class);
 	}
 
 	public String toJson() {

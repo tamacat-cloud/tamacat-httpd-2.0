@@ -7,11 +7,11 @@ package cloud.tamacat.httpd.tls;
 
 import javax.net.ssl.SSLContext;
 
-import cloud.tamacat.httpd.config.Config;
+import cloud.tamacat.httpd.config.ServerConfig;
 
 public interface SSLContextCreator {
 
-	void setServerConfig(Config serverConfig);
+	void setServerConfig(ServerConfig serverConfig);
 	
 	SSLContext getSSLContext();
 }

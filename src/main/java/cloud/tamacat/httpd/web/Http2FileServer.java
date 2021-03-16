@@ -34,6 +34,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.hc.core5.http.Header;
 import org.apache.hc.core5.http.HttpConnection;
+import org.apache.hc.core5.http.URIScheme;
 import org.apache.hc.core5.http.impl.bootstrap.HttpAsyncServer;
 import org.apache.hc.core5.http2.frame.RawFrame;
 import org.apache.hc.core5.http2.impl.nio.H2StreamListener;
@@ -118,7 +119,7 @@ public class Http2FileServer {
         });
 
         server.start();
-        final Future<ListenerEndpoint> future = server.listen(new InetSocketAddress(port));
+        final Future<ListenerEndpoint> future = server.listen(new InetSocketAddress(port), URIScheme.HTTP);
         final ListenerEndpoint listenerEndpoint = future.get();
         LOG.info("Listening on " + listenerEndpoint.getAddress());
         server.awaitShutdown(TimeValue.ofDays(Long.MAX_VALUE));
