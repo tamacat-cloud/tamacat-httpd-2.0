@@ -116,6 +116,9 @@ public class ThymeleafServerRequestHandler implements AsyncServerRequestHandler<
 			EndpointDetails endpoint = coreContext.getEndpointDetails();
 			
 			String path = requestUri.getPath();
+			if (StringUtils.isEmpty(path) || path.contains("..")) {
+				throw new NotFoundException();
+			}
 			//ctx.setVariable("param", RequestUtils.parseParameters(request, context, encoding).getParameterMap());
 			ctx.setVariable("contextRoot", serviceConfig.getPath().replaceFirst("/$", ""));
 			if (isMatchUrlPattern(path) || path.endsWith("/")) {
@@ -200,7 +203,7 @@ public class ThymeleafServerRequestHandler implements AsyncServerRequestHandler<
 	
 	protected String getDecodeUri(String uri) {
 		String decoded = URLDecoder.decode(uri, StandardCharsets.UTF_8);
-		if (StringUtils.isEmpty(decoded) || decoded.indexOf("../")>=0 || decoded.indexOf("..\\")>=0) {
+		if (StringUtils.isEmpty(decoded) || decoded.contains("..")) {
 			throw new NotFoundException();
 		}
 		return decoded;

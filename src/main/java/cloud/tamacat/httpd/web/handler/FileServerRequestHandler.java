@@ -108,10 +108,12 @@ public class FileServerRequestHandler implements AsyncServerRequestHandler<Messa
 			try {
 				requestUri = request.getUri();
 			} catch (final URISyntaxException ex) {
-				
 				throw new NotFoundException(ex.getMessage(), ex);
 			}
 			String path = requestUri.getPath();
+			if (StringUtils.isEmpty(path) || path.contains("..")) {
+				throw new NotFoundException();
+			}
 			File file = new File(docsRoot, getDecodeUri(path));
 			if (!file.exists()) {
 				throw new NotFoundException("Not found file " + file.getPath());
@@ -169,7 +171,7 @@ public class FileServerRequestHandler implements AsyncServerRequestHandler<Messa
 	
 	protected String getDecodeUri(String uri) {
 		String decoded = URLDecoder.decode(uri, StandardCharsets.UTF_8);
-		if (StringUtils.isEmpty(decoded) || decoded.indexOf("../")>=0 || decoded.indexOf("..\\")>=0) {
+		if (StringUtils.isEmpty(decoded) || decoded.contains("..")) {
 			throw new NotFoundException();
 		}
 		return decoded;
