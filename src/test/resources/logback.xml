@@ -8,11 +8,11 @@
   <logger name="Access" level="INFO"/>
   <logger name="cloud.tamacat" level="DEBUG"/>
   <logger name="org.thymeleaf" level="OFF" />
-  <logger name="org" level="DEBUG"/>
+  <logger name="org" level="INFO"/>
   <logger name="com" level="INFO"/>
   <logger name="ch.qos" level="ERROR"/>
 
-  <root level="TRACE">
+  <root level="WARN">
     <appender-ref ref="STDOUT"/>
   </root>
 </configuration>

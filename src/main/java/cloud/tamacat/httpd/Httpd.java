@@ -29,6 +29,8 @@ import cloud.tamacat.httpd.listener.TraceConnPoolListener;
 import cloud.tamacat.httpd.listener.TraceHttp1StreamListener;
 import cloud.tamacat.httpd.reverse.handler.IncomingExchangeHandler;
 import cloud.tamacat.httpd.tls.SSLSNIContextCreator;
+import cloud.tamacat.httpd.tomcat.TomcatDeployment;
+import cloud.tamacat.httpd.tomcat.TomcatHttpEngine;
 import cloud.tamacat.httpd.web.handler.FileServerRequestHandler;
 import cloud.tamacat.httpd.web.handler.ThymeleafServerRequestHandler;
 import cloud.tamacat.log.Log;
@@ -110,6 +112,8 @@ public class Httpd {
 			
 			if (serviceConfig.isReverseProxy()) {
 				registerReverseProxy(serviceConfig, bootstrap, requester);
+			} else if ("tomcat".equals(serviceConfig.getType())) {
+				registerTomcatEmbedded(serviceConfig, bootstrap, requester);
 			} else if ("thymeleaf".equals(serviceConfig.getType())) {
 				registerThymeleafServer(serviceConfig, bootstrap, requester);
 			} else {
@@ -121,7 +125,9 @@ public class Httpd {
 				bootstrap.addFilterFirst(id, filter.getFilter(serviceConfig));
 			});
 		}
-				
+		
+		new TomcatHttpEngine().startup();
+		
 		HttpAsyncServer server = bootstrap.create();
 		return server;
 	}
@@ -147,7 +153,27 @@ public class Httpd {
 	protected void registerReverseProxy(ServiceConfig serviceConfig, AsyncServerBootstrap bootstrap, HttpAsyncRequester requester) {
 		try {
 			HttpHost targetHost = HttpHost.create(serviceConfig.getReverse().getTarget().toURI());
-			LOG.info(serviceConfig.getPath() + "* Reverse proxy to " + targetHost);
+			LOG.info(serviceConfig.getPath() + "* ReverseProxy to " + targetHost);
+			bootstrap.register(serviceConfig.getPath() + "*", new Supplier<AsyncServerExchangeHandler>() {
+
+				@Override
+				public AsyncServerExchangeHandler get() {
+					return new IncomingExchangeHandler(targetHost, requester);
+				}
+
+			});
+		} catch (Exception e) {
+			LOG.error(e.getMessage(), e);
+		}
+	}
+	
+	protected void registerTomcatEmbedded(ServiceConfig serviceConfig, AsyncServerBootstrap bootstrap, HttpAsyncRequester requester) {
+		try {
+			TomcatDeployment tomcatDeploy = new TomcatDeployment();
+			tomcatDeploy.deploy(serviceConfig);
+			
+			HttpHost targetHost = HttpHost.create(serviceConfig.getReverse().getTarget().toURI());
+			LOG.info(serviceConfig.getPath() + "* ReverseProxy+TomcatEmbedded to " + targetHost);
 			bootstrap.register(serviceConfig.getPath() + "*", new Supplier<AsyncServerExchangeHandler>() {
 
 				@Override
