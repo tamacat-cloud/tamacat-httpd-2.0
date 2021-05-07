@@ -30,7 +30,6 @@
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm:ssZ</maven.build.timestamp.format>
     <httpcomponents.core5.version>5.1</httpcomponents.core5.version>
     <junit.jupiter.version>[5.7,5.8.0-M1)</junit.jupiter.version>
-    <tamacat.version>[2.0-SNAPSHOT,2.1)</tamacat.version>
     <buildDate>${maven.build.timestamp}</buildDate>
     <timestamp>${maven.build.timestamp}</timestamp>
     <maven.build.timestamp.format>yyyyMMdd</maven.build.timestamp.format>
@@ -43,8 +42,9 @@
     <dependency>
       <groupId>cloud.tamacat</groupId>
       <artifactId>tamacat-core</artifactId>
-      <version>${tamacat.version}</version>
+      <version>${project.version}</version>
     </dependency>
+    
     <dependency>
       <groupId>org.apache.httpcomponents.core5</groupId>
       <artifactId>httpcore5</artifactId>
