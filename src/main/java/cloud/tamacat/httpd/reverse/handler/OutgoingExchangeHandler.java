@@ -105,6 +105,10 @@ public class OutgoingExchangeHandler implements AsyncClientExchangeHandler {
 				}
 			}
 
+			//Add X-Fowarded headers
+			outgoingRequest.setHeader("X-Forwarded-For", AccessLogUtils.getRemoteAddress(httpContext));
+			outgoingRequest.setHeader("X-Forwarded-Proto", incomingRequest.getScheme());
+			
 			if (LOG.isTraceEnabled()) {
 				LOG.trace("[proxy->origin] " + exchangeState.id + " " + outgoingRequest.getMethod() + " " + outgoingRequest.getRequestUri());
 			}

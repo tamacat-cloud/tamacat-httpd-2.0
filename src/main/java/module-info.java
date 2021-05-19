@@ -29,5 +29,6 @@ module cloud.tamacat.httpd {
 	requires transitive com.google.gson;
 	requires transitive org.slf4j;
 	
-	requires org.apache.tomcat.embed.core;
+	requires org.eclipse.jetty.server;
+	requires org.eclipse.jetty.webapp;
 }

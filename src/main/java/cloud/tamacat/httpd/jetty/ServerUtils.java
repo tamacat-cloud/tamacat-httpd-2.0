@@ -2,7 +2,7 @@
  * Copyright 2015 tamacat.org
  * All rights reserved.
  */
-package cloud.tamacat.httpd.tomcat.util;
+package cloud.tamacat.httpd.jetty;
 
 import java.io.File;
 
