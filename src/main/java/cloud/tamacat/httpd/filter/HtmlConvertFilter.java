@@ -41,21 +41,21 @@ public class HtmlConvertFilter extends Filter {
 
 			@Override
 			public void sendInformation(HttpResponse response) throws HttpException, IOException {
-				LOG.info("#sendInformation");
+				LOG.trace("#sendInformation");
 				responseTrigger.sendInformation(response);
 			}
 			
 			@Override
 			public void submitResponse(HttpResponse response, AsyncEntityProducer entityProducer)
 					throws HttpException, IOException {
-				LOG.info("#submitResponse");
+				LOG.trace("#submitResponse");
 				
                 responseTrigger.submitResponse(response, entityProducer);
 			}
 
 			@Override
 			public void pushPromise(HttpRequest promise, AsyncPushProducer responseProducer) throws HttpException, IOException {
-				LOG.info("#pushPromise");
+				LOG.trace("#pushPromise");
                 responseTrigger.pushPromise(promise, responseProducer);
 			}
 		});
