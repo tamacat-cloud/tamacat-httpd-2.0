@@ -29,7 +29,7 @@
     <maven.compiler.target>11</maven.compiler.target>
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm:ssZ</maven.build.timestamp.format>
     <httpcomponents.core5.version>5.1.2</httpcomponents.core5.version>
-    <jetty.version>11.0.3</jetty.version>
+    <jetty.version>11.0.6</jetty.version>
     <junit.jupiter.version>[5.7,5.8.0-M1)</junit.jupiter.version>
     <buildDate>${maven.build.timestamp}</buildDate>
     <timestamp>${maven.build.timestamp}</timestamp>
@@ -108,17 +108,17 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-      <version>1.7.30</version>
+      <version>1.7.32</version>
     </dependency>
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-core</artifactId>
-      <version>1.2.3</version>
+      <version>1.2.6</version>
     </dependency>
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
-      <version>1.2.3</version>
+      <version>1.2.6</version>
     </dependency>
     
     <dependency>
