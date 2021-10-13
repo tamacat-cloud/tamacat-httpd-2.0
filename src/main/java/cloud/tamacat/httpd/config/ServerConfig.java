@@ -52,7 +52,7 @@ public class ServerConfig implements Serializable {
 	
 	@SerializedName("https")
 	@Expose
-	HttpsConig httpsConfig;
+	HttpsConfig httpsConfig;
 	
 	public String getServerName() {
 		return serverName;
@@ -78,7 +78,7 @@ public class ServerConfig implements Serializable {
 		return "https".equalsIgnoreCase(protocol);
 	}
 	
-	public HttpsConig getHttpsConfig() {
+	public HttpsConfig getHttpsConfig() {
 		return httpsConfig;
 	}
 	

@@ -5,7 +5,7 @@
  */
 package cloud.tamacat.httpd.config;
 
-public class HttpsConig {
+public class HttpsConfig {
 
 	String keyStoreFile;
 	String keyPassword;
@@ -13,7 +13,8 @@ public class HttpsConig {
 	String protocol = "TLSv1_2";
 	String supportProtocol = "TLSv1_2";
 	String defaultAlias;
-	
+	boolean clientAuth;
+
 	public String getKeyStoreFile() {
 		return keyStoreFile;
 	}
@@ -60,5 +61,20 @@ public class HttpsConig {
 	
 	public void setDefaultAlias(String defaultAlias) {
 		this.defaultAlias = defaultAlias;
+	}
+	
+	public boolean useClientAuth() {
+		return clientAuth;
+	}
+
+	public void setClientAuth(boolean clientAuth) {
+		this.clientAuth = clientAuth;
+	}
+
+	@Override
+	public String toString() {
+		return "HttpsConig [keyStoreFile=" + keyStoreFile + ", keyPassword=" + keyPassword + ", keyStoreType="
+				+ keyStoreType + ", protocol=" + protocol + ", supportProtocol=" + supportProtocol + ", defaultAlias="
+				+ defaultAlias + ", clientAuth=" + clientAuth + "]";
 	}
 }
