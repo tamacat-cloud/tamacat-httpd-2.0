@@ -57,6 +57,7 @@ import org.apache.hc.core5.http.protocol.HttpContext;
 import org.apache.hc.core5.http.protocol.HttpCoreContext;
 import org.apache.hc.core5.util.Timeout;
 
+import cloud.tamacat.httpd.config.ServiceConfig;
 import cloud.tamacat.log.Log;
 import cloud.tamacat.log.LogFactory;
 
@@ -78,11 +79,10 @@ public class IncomingExchangeHandler implements AsyncServerExchangeHandler {
 	private final HttpAsyncRequester requester;
 	private final ProxyExchangeState exchangeState;
 
-	public IncomingExchangeHandler(final HttpHost targetHost, final HttpAsyncRequester requester) {
-		super();
+	public IncomingExchangeHandler(final HttpHost targetHost, final HttpAsyncRequester requester, final ServiceConfig serviceConfig) {
 		this.targetHost = targetHost;
 		this.requester = requester;
-		this.exchangeState = new ProxyExchangeState();
+		this.exchangeState = new ProxyExchangeState(serviceConfig);
 	}
 
 	@Override

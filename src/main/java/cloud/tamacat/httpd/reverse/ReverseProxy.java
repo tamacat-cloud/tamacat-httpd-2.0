@@ -153,7 +153,7 @@ public class ReverseProxy {
 
 			@Override
 			public AsyncServerExchangeHandler get() {
-				return new IncomingExchangeHandler(targetHost, requester);
+				return new IncomingExchangeHandler(targetHost, requester, serviceConfig);
 			}
 
 		}).create();

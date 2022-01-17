@@ -36,6 +36,9 @@ import org.apache.hc.core5.http.nio.CapacityChannel;
 import org.apache.hc.core5.http.nio.DataStreamChannel;
 import org.apache.hc.core5.http.nio.ResponseChannel;
 
+import cloud.tamacat.httpd.config.ReverseConfig;
+import cloud.tamacat.httpd.config.ServiceConfig;
+
 /**
  * @see
  * https://hc.apache.org/httpcomponents-core-5.0.x/httpcore5/examples/AsyncReverseProxyExample.java
@@ -44,6 +47,7 @@ public class ProxyExchangeState {
 	private static final AtomicLong COUNT = new AtomicLong(0);
 
 	final String id;
+	final ServiceConfig serviceConfig;
 
 	HttpRequest request;
 	EntityDetails requestEntityDetails;
@@ -64,12 +68,18 @@ public class ProxyExchangeState {
 
 	AsyncClientEndpoint clientEndpoint;
 
-	ProxyExchangeState() {
+	ProxyExchangeState(ServiceConfig serviceConfig) {
+		this.serviceConfig = serviceConfig;
 		this.id = String.format("%08X", COUNT.getAndIncrement());
 		this.startTime = System.currentTimeMillis();
 	}
 	
 	long getResponseTime() {
 		return System.currentTimeMillis() - startTime;
+	}
+	
+	String getReverseTargetPath(String incomingRequestPath) {
+		ReverseConfig reverseConfig = serviceConfig.getReverse();
+		return reverseConfig != null ? reverseConfig.getReverseUrl(incomingRequestPath).getPath() : incomingRequestPath;
 	}
 }

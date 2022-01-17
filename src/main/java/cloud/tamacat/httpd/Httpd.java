@@ -181,7 +181,7 @@ public class Httpd {
 
 				@Override
 				public AsyncServerExchangeHandler get() {
-					return new IncomingExchangeHandler(targetHost, requester);
+					return new IncomingExchangeHandler(targetHost, requester, serviceConfig);
 				}
 
 			});
@@ -201,7 +201,7 @@ public class Httpd {
 
 				@Override
 				public AsyncServerExchangeHandler get() {
-					return new IncomingExchangeHandler(targetHost, requester);
+					return new IncomingExchangeHandler(targetHost, requester, serviceConfig);
 				}
 
 			});

@@ -97,7 +97,9 @@ public class OutgoingExchangeHandler implements AsyncClientExchangeHandler {
 		synchronized (exchangeState) {
 			final HttpRequest incomingRequest = exchangeState.request;
 			final EntityDetails entityDetails = exchangeState.requestEntityDetails;
-			final HttpRequest outgoingRequest = new BasicHttpRequest(incomingRequest.getMethod(), targetHost, incomingRequest.getPath());
+			
+			final String reverseTargetPath = exchangeState.getReverseTargetPath(incomingRequest.getPath());
+			final HttpRequest outgoingRequest = new BasicHttpRequest(incomingRequest.getMethod(), targetHost, reverseTargetPath);
 			for (final Iterator<Header> it = incomingRequest.headerIterator(); it.hasNext();) {
 				final Header header = it.next();
 				if (!HOP_BY_HOP.contains(header.getName().toLowerCase(Locale.ROOT))) {
@@ -105,7 +107,7 @@ public class OutgoingExchangeHandler implements AsyncClientExchangeHandler {
 				}
 			}
 
-			//Add X-Fowarded headers
+			//Add X-Forwarded headers
 			outgoingRequest.setHeader("X-Forwarded-For", AccessLogUtils.getRemoteAddress(httpContext));
 			outgoingRequest.setHeader("X-Forwarded-Proto", incomingRequest.getScheme());
 			

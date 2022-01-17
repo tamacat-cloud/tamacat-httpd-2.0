@@ -146,6 +146,9 @@ public class ServiceConfig {
 	}
 	
 	public ReverseConfig getReverse() {
+		if (reverse.getServiceConfig() == null) {
+			reverse.setServiceConfig(this);
+		}
 		return reverse;
 	}
 

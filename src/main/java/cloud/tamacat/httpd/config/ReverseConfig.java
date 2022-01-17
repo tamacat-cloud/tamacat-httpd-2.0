@@ -26,8 +26,6 @@ public class ReverseConfig {
 	ServiceConfig serviceConfig;
 	
 	private URL host;
-	private URL reverseUrl;
-
 	
 	public void setServiceConfig(ServiceConfig serviceConfig) {
 		this.serviceConfig = serviceConfig;
@@ -76,12 +74,18 @@ public class ReverseConfig {
 	}
 
 	public URL getReverse() {
-		return reverseUrl;
+		try {
+			return new URL(url);
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 	
 	public URL getReverseUrl(String path) {
 		String p = serviceConfig.getPath();
 		if (path != null && p != null && path.startsWith(p)) {
+			URL reverseUrl = getReverse();
 			String distUrl = path.replaceFirst(serviceConfig.getPath(), reverseUrl.getPath());
 			try {
 				int port = reverseUrl.getPort();
@@ -100,6 +104,7 @@ public class ReverseConfig {
 	 *   =>  http://localhost/examples2/servlet
 	 */
 	public String getConvertRequestedUrl(String path) {
+		URL reverseUrl = getReverse();
 		URL host = getHost(); // requested URL (path is deleted)
 		if (path != null && host != null) {
 			return path.replaceFirst(
@@ -112,5 +117,10 @@ public class ReverseConfig {
 	
 	public String toJson() {
 		return JsonUtils.toJson(this);
+	}
+
+	@Override
+	public String toString() {
+		return "ReverseConfig [url=" + url + "]";
 	}
 }
