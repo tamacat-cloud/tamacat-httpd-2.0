@@ -3,7 +3,8 @@
   "host": "localhost",
   "maxTotal": 100,
   "maxPerRoute": 20,
-  "SoTimeout": 60,
+  "soTimeout": 60,
+  "keepAlive": true,
   "services": [
     {
       "path": "/",

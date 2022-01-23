@@ -8,6 +8,7 @@ package cloud.tamacat.httpd.util;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -16,6 +17,8 @@ import org.apache.hc.core5.http.Header;
 import org.apache.hc.core5.http.HttpHeaders;
 import org.apache.hc.core5.http.HttpRequest;
 import org.apache.hc.core5.http.HttpResponse;
+import org.apache.hc.core5.http.HttpVersion;
+import org.apache.hc.core5.http.message.BasicHeader;
 import org.apache.hc.core5.http.protocol.HttpContext;
 
 import cloud.tamacat.httpd.config.ReverseConfig;
@@ -72,6 +75,10 @@ public class ReverseUtils {
 				removeResponseHeaders.add(h.trim());
 			}
 		}
+	}
+	
+	public static String getReverseTargetPath(ReverseConfig reverseConfig, String incomingRequestPath) {
+		return reverseConfig != null ? reverseConfig.getReverseUrl(incomingRequestPath).getFile() : incomingRequestPath;
 	}
 
 	/**
@@ -161,11 +168,10 @@ public class ReverseUtils {
 	public static void rewriteSetCookieHeader(
 			HttpRequest request, HttpResponse response, ReverseConfig reverseUrl) {
 		Header[] cookies = response.getHeaders("Set-Cookie");
-		ArrayList<String> newValues = new ArrayList<String>();
+		List<String> newValues = new ArrayList<>();
 		for (Header h : cookies) {
 			String value = h.getValue();
-			String newValue = ReverseUtils.getConvertedSetCookieHeader(
-					request, reverseUrl, value);
+			String newValue = ReverseUtils.getConvertedSetCookieHeader(request, reverseUrl, value);
 			if (StringUtils.isNotEmpty(newValue)) {
 				newValues.add(newValue);
 				response.removeHeader(h);
@@ -173,6 +179,7 @@ public class ReverseUtils {
 		}
 		for (String newValue : newValues) {
 			response.addHeader("Set-Cookie", newValue);
+			LOG.trace("[after] Set-Cookie: "+newValue);
 		}
 	}
 
@@ -260,6 +267,40 @@ public class ReverseUtils {
 			} else {
 				request.removeHeaders(headerName);
 			}
+		}
+	}
+	
+	public static void appendHostHeader(HttpRequest request, ReverseConfig reverseUrl) {
+		if (request.getVersion().lessEquals(HttpVersion.HTTP_1_0)
+		 && StringUtils.isEmpty(HeaderUtils.getHeader(request, HttpHeaders.HOST))) {
+			request.setHeader(HttpHeaders.HOST, reverseUrl.getTarget().getHostName());
+			LOG.debug("Host(add): "+HeaderUtils.getHeader(request, HttpHeaders.HOST));
+		}
+	}
+	
+	//rewrite Host Header
+	public static void rewriteHostHeader(HttpRequest request, HttpContext context, ReverseConfig reverseUrl) {
+		Header[] hostHeaders = request.getHeaders(HttpHeaders.HOST);
+		for (Header hostHeader : hostHeaders) {
+			String value = hostHeader.getValue();
+			URL host = RequestUtils.getRequestURL(request, context, reverseUrl.getServiceConfig());
+			reverseUrl.setHost(host);
+			String before = host.getAuthority();
+			int beforePort = host.getPort();
+			if (beforePort != 80 && beforePort > 0) {
+				before = before + ":" + beforePort;
+			}
+			String after = reverseUrl.getReverse().getHost();
+			int afterPort = reverseUrl.getReverse().getPort();
+			if (afterPort != 80 && afterPort > 0) {
+				after = after + ":" + afterPort;
+			}
+			String newValue = value.replace(before, after);
+
+			LOG.trace("Host: " + value + " >> " + newValue);
+			Header newHeader = new BasicHeader(hostHeader.getName(), newValue);
+			request.removeHeader(hostHeader);
+			request.addHeader(newHeader);
 		}
 	}
 

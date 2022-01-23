@@ -42,10 +42,14 @@ public class ServerConfig implements Serializable {
 	@Expose
 	int maxParRoute = 20;
 
-	@SerializedName("SoTimeout")
+	@SerializedName("soTimeout")
 	@Expose
 	int soTimeout = 60;
-		
+	
+	@SerializedName("keepAlive")
+	@Expose
+	boolean keepAlive = true;
+	
 	@SerializedName("services")
 	@Expose
 	Collection<ServiceConfig> services = new ArrayList<>();
@@ -94,6 +98,10 @@ public class ServerConfig implements Serializable {
 		return soTimeout;
 	}
 
+	public boolean keepAlive() {
+		return keepAlive;
+	}
+	
 	public ServerConfig host(String host) {
 		if (StringUtils.isNotEmpty(host)) {
 			this.host = host;
@@ -139,6 +147,13 @@ public class ServerConfig implements Serializable {
 	public ServerConfig soTimeout(Integer soTimeout) {
 		if (soTimeout != null) {
 			this.soTimeout = soTimeout.intValue();
+		}
+		return this;
+	}
+	
+	public ServerConfig keepAlive(Boolean keepAlive) {
+		if (keepAlive != null) {
+			this.keepAlive = keepAlive.booleanValue();
 		}
 		return this;
 	}

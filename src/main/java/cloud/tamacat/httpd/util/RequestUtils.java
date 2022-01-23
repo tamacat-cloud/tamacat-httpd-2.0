@@ -12,9 +12,7 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.Inet6Address;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
-import java.net.SocketAddress;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.Set;
@@ -343,6 +341,7 @@ public class RequestUtils {
 			} else {
 				port = url.getServerConfig().getPort();
 			}
+			/* TODO
 			if (context != null) {
 				HttpConnection con = getHttpConnection(context);
 				SocketAddress addr = con.getLocalAddress();
@@ -352,7 +351,7 @@ public class RequestUtils {
 				if (hostName == null) {
 					hostName = ((InetSocketAddress)addr).getHostName();
 				}
-			}
+			}*/
 		}
 		if (("http".equalsIgnoreCase(protocol) && port == 80)
 			|| ("https".equalsIgnoreCase(protocol) && port == 443)){

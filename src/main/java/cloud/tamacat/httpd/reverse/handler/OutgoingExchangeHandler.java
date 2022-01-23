@@ -49,6 +49,7 @@ import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.HttpRequest;
 import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.HttpStatus;
+import org.apache.hc.core5.http.HttpVersion;
 import org.apache.hc.core5.http.impl.BasicEntityDetails;
 import org.apache.hc.core5.http.message.BasicHttpRequest;
 import org.apache.hc.core5.http.message.BasicHttpResponse;
@@ -60,7 +61,9 @@ import org.apache.hc.core5.http.nio.RequestChannel;
 import org.apache.hc.core5.http.nio.ResponseChannel;
 import org.apache.hc.core5.http.protocol.HttpContext;
 
+import cloud.tamacat.httpd.config.ReverseConfig;
 import cloud.tamacat.httpd.util.AccessLogUtils;
+import cloud.tamacat.httpd.util.ReverseUtils;
 import cloud.tamacat.log.Log;
 import cloud.tamacat.log.LogFactory;
 
@@ -75,12 +78,17 @@ public class OutgoingExchangeHandler implements AsyncClientExchangeHandler {
 	private static final int INIT_BUFFER_SIZE = 4096;
 
 	private final static Set<String> HOP_BY_HOP = Collections
-			.unmodifiableSet(new HashSet<>(Arrays.asList(HttpHeaders.HOST.toLowerCase(Locale.ROOT),
+			.unmodifiableSet(new HashSet<>(Arrays.asList(
+					HttpHeaders.HOST.toLowerCase(Locale.ROOT),
 					HttpHeaders.CONTENT_LENGTH.toLowerCase(Locale.ROOT),
 					HttpHeaders.TRANSFER_ENCODING.toLowerCase(Locale.ROOT),
-					HttpHeaders.CONNECTION.toLowerCase(Locale.ROOT), HttpHeaders.KEEP_ALIVE.toLowerCase(Locale.ROOT),
-					HttpHeaders.PROXY_AUTHENTICATE.toLowerCase(Locale.ROOT), HttpHeaders.TE.toLowerCase(Locale.ROOT),
-					HttpHeaders.TRAILER.toLowerCase(Locale.ROOT), HttpHeaders.UPGRADE.toLowerCase(Locale.ROOT))));
+					HttpHeaders.CONNECTION.toLowerCase(Locale.ROOT),
+					HttpHeaders.KEEP_ALIVE.toLowerCase(Locale.ROOT),
+					HttpHeaders.PROXY_AUTHENTICATE.toLowerCase(Locale.ROOT),
+					HttpHeaders.TE.toLowerCase(Locale.ROOT),
+					HttpHeaders.TRAILER.toLowerCase(Locale.ROOT),
+					HttpHeaders.UPGRADE.toLowerCase(Locale.ROOT)
+			)));
 
 	private final HttpHost targetHost;
 	private final AsyncClientEndpoint clientEndpoint;
@@ -97,16 +105,24 @@ public class OutgoingExchangeHandler implements AsyncClientExchangeHandler {
 		synchronized (exchangeState) {
 			final HttpRequest incomingRequest = exchangeState.request;
 			final EntityDetails entityDetails = exchangeState.requestEntityDetails;
+			final ReverseConfig reverseConfig = exchangeState.serviceConfig.getReverse();
 			
-			final String reverseTargetPath = exchangeState.getReverseTargetPath(incomingRequest.getPath());
+			//LOG.debug("incomingRequest.getPath()="+incomingRequest.getPath());
+			final String reverseTargetPath = ReverseUtils.getReverseTargetPath(reverseConfig, incomingRequest.getPath());
+			//LOG.debug("reverseTargetPath="+reverseTargetPath);
+			
 			final HttpRequest outgoingRequest = new BasicHttpRequest(incomingRequest.getMethod(), targetHost, reverseTargetPath);
+			outgoingRequest.setVersion(HttpVersion.HTTP_1_1);
 			for (final Iterator<Header> it = incomingRequest.headerIterator(); it.hasNext();) {
 				final Header header = it.next();
 				if (!HOP_BY_HOP.contains(header.getName().toLowerCase(Locale.ROOT))) {
 					outgoingRequest.addHeader(header);
 				}
 			}
-
+			
+			ReverseUtils.appendHostHeader(outgoingRequest, reverseConfig);
+			ReverseUtils.rewriteHostHeader(outgoingRequest, httpContext, reverseConfig);
+			
 			//Add X-Forwarded headers
 			outgoingRequest.setHeader("X-Forwarded-For", AccessLogUtils.getRemoteAddress(httpContext));
 			outgoingRequest.setHeader("X-Forwarded-Proto", incomingRequest.getScheme());
@@ -172,6 +188,9 @@ public class OutgoingExchangeHandler implements AsyncClientExchangeHandler {
 			}
 
 			final HttpResponse outgoingResponse = new BasicHttpResponse(incomingResponse.getCode());
+			outgoingResponse.setVersion(HttpVersion.HTTP_1_1);
+			outgoingResponse.setReasonPhrase(incomingResponse.getReasonPhrase());
+			
 			for (final Iterator<Header> it = incomingResponse.headerIterator(); it.hasNext();) {
 				final Header header = it.next();
 				if (!HOP_BY_HOP.contains(header.getName().toLowerCase(Locale.ROOT))) {
@@ -180,11 +199,21 @@ public class OutgoingExchangeHandler implements AsyncClientExchangeHandler {
 					outgoingResponse.addHeader(header);
 				}
 			}
+			
+			ReverseUtils.rewriteStatusLine(exchangeState.request, outgoingResponse);
+			ReverseUtils.rewriteContentLocationHeader(exchangeState.request, outgoingResponse, exchangeState.serviceConfig.getReverse());
+			ReverseUtils.rewriteServerHeader(outgoingResponse, exchangeState.serviceConfig.getReverse());
 
+			//Location Header convert.
+			ReverseUtils.rewriteLocationHeader(exchangeState.request, outgoingResponse, exchangeState.serviceConfig.getReverse());
+
+			//Set-Cookie Header convert.
+			ReverseUtils.rewriteSetCookieHeader(exchangeState.request, outgoingResponse, exchangeState.serviceConfig.getReverse());
+			
 			exchangeState.response = outgoingResponse;
 			exchangeState.responseEntityDetails = entityDetails;
 			exchangeState.outputEnd = entityDetails == null;
-
+			
 			final ResponseChannel responseChannel = exchangeState.responseMessageChannel;
 			if (responseChannel != null) {
 				// responseChannel can be null under load.
@@ -271,14 +300,14 @@ public class OutgoingExchangeHandler implements AsyncClientExchangeHandler {
 
 	@Override
 	public void failed(final Exception cause) {
-		if (LOG.isTraceEnabled()) {
-			LOG.trace("[client<-proxy] " + exchangeState.id + " " + cause.getMessage());
-		}
-		if (!(cause instanceof ConnectionClosedException)) {
-			//cause.printStackTrace(System.out);
-			LOG.warn(cause.getMessage(), cause);
-		}
 		synchronized (exchangeState) {
+			if (LOG.isTraceEnabled()) {
+				LOG.trace("[client<-proxy] " + exchangeState.id + " " + cause.getMessage());
+			}
+			if (!(cause instanceof ConnectionClosedException)) {
+				cause.printStackTrace(System.out);
+				LOG.warn(cause.getMessage(), cause);
+			}
 			if (exchangeState.response == null) {
 				final int status = cause instanceof IOException ? HttpStatus.SC_SERVICE_UNAVAILABLE : HttpStatus.SC_INTERNAL_SERVER_ERROR;
 				final HttpResponse outgoingResponse = new BasicHttpResponse(status);

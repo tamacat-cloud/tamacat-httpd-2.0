@@ -36,7 +36,6 @@ import org.apache.hc.core5.http.nio.CapacityChannel;
 import org.apache.hc.core5.http.nio.DataStreamChannel;
 import org.apache.hc.core5.http.nio.ResponseChannel;
 
-import cloud.tamacat.httpd.config.ReverseConfig;
 import cloud.tamacat.httpd.config.ServiceConfig;
 
 /**
@@ -70,16 +69,11 @@ public class ProxyExchangeState {
 
 	ProxyExchangeState(ServiceConfig serviceConfig) {
 		this.serviceConfig = serviceConfig;
-		this.id = String.format("%08X", COUNT.getAndIncrement());
+		this.id = String.format("%010d", COUNT.getAndIncrement());
 		this.startTime = System.currentTimeMillis();
 	}
 	
 	long getResponseTime() {
 		return System.currentTimeMillis() - startTime;
-	}
-	
-	String getReverseTargetPath(String incomingRequestPath) {
-		ReverseConfig reverseConfig = serviceConfig.getReverse();
-		return reverseConfig != null ? reverseConfig.getReverseUrl(incomingRequestPath).getPath() : incomingRequestPath;
 	}
 }

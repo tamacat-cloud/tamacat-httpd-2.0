@@ -30,7 +30,6 @@ import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.hc.core5.function.Supplier;
 import org.apache.hc.core5.http.HttpConnection;
 import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.HttpRequest;
@@ -40,7 +39,6 @@ import org.apache.hc.core5.http.impl.bootstrap.AsyncRequesterBootstrap;
 import org.apache.hc.core5.http.impl.bootstrap.AsyncServerBootstrap;
 import org.apache.hc.core5.http.impl.bootstrap.HttpAsyncRequester;
 import org.apache.hc.core5.http.impl.bootstrap.HttpAsyncServer;
-import org.apache.hc.core5.http.nio.AsyncServerExchangeHandler;
 import org.apache.hc.core5.io.CloseMode;
 import org.apache.hc.core5.pool.ConnPoolListener;
 import org.apache.hc.core5.pool.ConnPoolStats;
@@ -63,11 +61,13 @@ import cloud.tamacat.log.LogFactory;
 public class ReverseProxy {
 
 	static final Log LOG = LogFactory.getLog(ReverseProxy.class);
-	static int maxTotal = 100;
-	static int defaultMaxPerRoute = 20;
+	int maxTotal = 200;
+	int defaultMaxPerRoute = 40;
 	
 	public void startup() throws Exception {
 		ServerConfig config = ServerConfig.load("service.json");
+		this.maxTotal = config.getMaxParRoute();
+		this.defaultMaxPerRoute = config.getMaxParRoute();
 		
 		Collection<ServiceConfig> configs = config.getServices();
 		ServiceConfig serviceConfig = configs.iterator().next();
@@ -127,7 +127,8 @@ public class ReverseProxy {
 
 		}).setMaxTotal(maxTotal).setDefaultMaxPerRoute(defaultMaxPerRoute).create();
 
-		HttpAsyncServer server = AsyncServerBootstrap.bootstrap().setIOReactorConfig(reactor)
+		HttpAsyncServer server = AsyncServerBootstrap.bootstrap()
+			.setIOReactorConfig(reactor)
 			.setStreamListener(new Http1StreamListener() {
 
 			@Override
@@ -149,23 +150,15 @@ public class ReverseProxy {
 				}
 			}
 
-		}).register(serviceConfig.getPath()+"*", new Supplier<AsyncServerExchangeHandler>() {
+		})
+		.register(serviceConfig.getPath()+"*", () -> new IncomingExchangeHandler(targetHost, requester, serviceConfig))
+		.create();
 
-			@Override
-			public AsyncServerExchangeHandler get() {
-				return new IncomingExchangeHandler(targetHost, requester, serviceConfig);
-			}
-
-		}).create();
-
-		Runtime.getRuntime().addShutdownHook(new Thread() {
-			@Override
-			public void run() {
-				LOG.info("Reverse proxy shutting down");
-				server.close(CloseMode.GRACEFUL);
-				requester.close(CloseMode.GRACEFUL);
-			}
-		});
+		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+			LOG.info("Reverse proxy shutting down");
+			server.close(CloseMode.GRACEFUL);
+			requester.close(CloseMode.GRACEFUL);
+		}));
 
 		requester.start();
 		server.start();

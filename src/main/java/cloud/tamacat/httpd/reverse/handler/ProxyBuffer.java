@@ -27,48 +27,25 @@
 package cloud.tamacat.httpd.reverse.handler;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 
-import org.apache.hc.core5.http.impl.nio.ExpandableBuffer;
+import org.apache.hc.core5.http.impl.nio.BufferedData;
 import org.apache.hc.core5.http.nio.DataStreamChannel;
 
 /**
  * @see
  * https://hc.apache.org/httpcomponents-core-5.0.x/httpcore5/examples/AsyncReverseProxyExample.java
  */
-public class ProxyBuffer extends ExpandableBuffer {
+public class ProxyBuffer extends BufferedData {
 
 	public ProxyBuffer(final int bufferSize) {
 		super(bufferSize);
 	}
 
-	public void put(final ByteBuffer src) {
-		setInputMode();
-		final int requiredCapacity = buffer().position() + src.remaining();
-		ensureCapacity(requiredCapacity);
-		buffer().put(src);
-	}
-
-	public int write(final DataStreamChannel channel) throws IOException {
-		setOutputMode();
-		if (buffer().hasRemaining()) {
-			return channel.write(buffer());
-		}
-		return 0;
-	}
-	
-	@Override
-    public int capacity() {
-    	return super.capacity();
-    }
-    
-	@Override
-    public boolean hasData() {
-    	return super.hasData();
-    }
-	
-	@Override
-    public int length() {
-    	return super.length();
+    int write(final DataStreamChannel channel) throws IOException {
+        setOutputMode();
+        if (buffer().hasRemaining()) {
+            return channel.write(buffer());
+        }
+        return 0;
     }
 }
