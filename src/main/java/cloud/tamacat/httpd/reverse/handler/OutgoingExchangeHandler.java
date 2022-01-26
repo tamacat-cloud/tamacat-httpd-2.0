@@ -27,6 +27,7 @@
 package cloud.tamacat.httpd.reverse.handler;
 
 import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.StandardCharsets;
@@ -304,11 +305,29 @@ public class OutgoingExchangeHandler implements AsyncClientExchangeHandler {
 			if (LOG.isTraceEnabled()) {
 				LOG.trace("[client<-proxy] " + exchangeState.id + " " + cause.getMessage());
 			}
-			if (!(cause instanceof ConnectionClosedException)) {
-				cause.printStackTrace(System.out);
+			
+			if (!(cause instanceof ConnectionClosedException) && !(cause instanceof SocketTimeoutException)) {
 				LOG.warn(cause.getMessage(), cause);
 			}
-			if (exchangeState.response == null) {
+			if (cause instanceof SocketTimeoutException) {
+				final int status = exchangeState.response.getCode();
+				LOG.warn("timeout="+exchangeState.request+", status="+status);
+				
+				if (exchangeState.response != null && exchangeState.responseDataChannel != null) {
+					exchangeState.response.addHeader(HttpHeaders.CONNECTION, HeaderElements.CLOSE);
+					try {
+						exchangeState.responseDataChannel.endStream();//.sendResponse(exchangeState.response, exchangeState.responseEntityDetails, exchangeState.httpContext);
+					} catch (Exception ignore) {
+						// ignore
+						ignore.printStackTrace();
+					}
+				}
+				if (LOG.isTraceEnabled()) {
+					LOG.trace("[client<-proxy] " + exchangeState.id + " status " + exchangeState.response.getCode());
+				}
+				LOG.warn(exchangeState.outBuf);
+				exchangeState.outputEnd = true;
+			} else if (exchangeState.response == null) {
 				final int status = cause instanceof IOException ? HttpStatus.SC_SERVICE_UNAVAILABLE : HttpStatus.SC_INTERNAL_SERVER_ERROR;
 				final HttpResponse outgoingResponse = new BasicHttpResponse(status);
 				outgoingResponse.addHeader(HttpHeaders.CONNECTION, HeaderElements.CLOSE);
@@ -341,6 +360,7 @@ public class OutgoingExchangeHandler implements AsyncClientExchangeHandler {
 		synchronized (exchangeState) {
 			exchangeState.requestDataChannel = null;
 			exchangeState.responseCapacityChannel = null;
+			exchangeState.startTime = System.currentTimeMillis();
 			clientEndpoint.releaseAndDiscard();
 		}
 	}

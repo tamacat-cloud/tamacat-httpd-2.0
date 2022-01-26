@@ -35,6 +35,7 @@ import org.apache.hc.core5.http.nio.AsyncClientEndpoint;
 import org.apache.hc.core5.http.nio.CapacityChannel;
 import org.apache.hc.core5.http.nio.DataStreamChannel;
 import org.apache.hc.core5.http.nio.ResponseChannel;
+import org.apache.hc.core5.http.protocol.HttpContext;
 
 import cloud.tamacat.httpd.config.ServiceConfig;
 
@@ -62,6 +63,8 @@ public class ProxyExchangeState {
 	CapacityChannel responseCapacityChannel;
 	ProxyBuffer outBuf;
 	boolean outputEnd;
+
+	HttpContext httpContext;
 	
 	long startTime;
 

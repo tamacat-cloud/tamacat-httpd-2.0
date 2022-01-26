@@ -84,23 +84,23 @@ public class ReverseProxy {
 
 			@Override
 			public void onLease(HttpHost route, ConnPoolStats<HttpHost> connPoolStats) {
-				if (LOG.isTraceEnabled()) {
+				if (LOG.isDebugEnabled()) {
 					StringBuilder buf = new StringBuilder();
 					buf.append("[proxy->origin] connection leased ").append(route);
-					LOG.trace(buf.toString());
+					LOG.debug(buf.toString());
 				}
 			}
 
 			@Override
 			public void onRelease(HttpHost route, ConnPoolStats<HttpHost> connPoolStats) {
-				if (LOG.isTraceEnabled()) {
+				if (LOG.isDebugEnabled()) {
 					StringBuilder buf = new StringBuilder();
 					buf.append("[proxy->origin] connection released ").append(route);
 					PoolStats totals = connPoolStats.getTotalStats();
 					buf.append("; total kept alive: ").append(totals.getAvailable()).append("; ");
 					buf.append("total allocated: ").append(totals.getLeased() + totals.getAvailable());
 					buf.append(" of ").append(totals.getMax());
-					LOG.trace(buf.toString());
+					LOG.debug(buf.toString());
 				}
 			}
 
