@@ -1,0 +1,39 @@
+package cloud.tamacat.httpd.listener;
+
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
+
+import org.apache.hc.core5.http.ConnectionClosedException;
+import org.apache.hc.core5.http.ExceptionListener;
+import org.apache.hc.core5.http.HttpConnection;
+
+import cloud.tamacat.log.Log;
+import cloud.tamacat.log.LogFactory;
+import cloud.tamacat.util.ExceptionUtils;
+
+public class TraceExceptionListener implements ExceptionListener {
+	static final Log LOG = LogFactory.getLog(TraceExceptionListener.class);
+	
+	@Override
+    public void onError(final Exception ex) {
+        if (ex instanceof SocketException) {
+            LOG.trace("[client->proxy] " + Thread.currentThread() + " " + ex.getMessage());
+        } else {
+        	LOG.trace("[client->proxy] " + Thread.currentThread()  + " " + ex.getMessage());
+        	LOG.trace(ExceptionUtils.getStackTrace(ex));
+        }
+    }
+
+    @Override
+    public void onError(final HttpConnection connection, final Exception ex) {
+        if (ex instanceof SocketTimeoutException) {
+        	LOG.trace("[client->proxy] " + Thread.currentThread() + " time out");
+        } else if (ex instanceof SocketException || ex instanceof ConnectionClosedException) {
+        	LOG.trace("[client->proxy] " + Thread.currentThread() + " " + ex.getMessage());
+        } else {
+        	LOG.trace("[client->proxy] " + Thread.currentThread() + " " + ex.getMessage());
+            LOG.trace(ExceptionUtils.getStackTrace(ex));
+        }
+    }
+
+}

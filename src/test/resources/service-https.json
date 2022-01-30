@@ -6,51 +6,29 @@
   "maxPerRoute": 20,
   "SoTimeout": 60,
   "https": {
-    "keyStoreFile": "sni-test-keystore.jks",
-    "keyPassword": "nopassword",
-    "keyStoreType": "JKS",
+    "keyStoreFile": "localhost.p12",
+    "keyPassword": "changeit",
+    "keyStoreType": "PKCS12",
     "protocol": "TLSv1.2",
-    "support-protocols": "TLSv1.2,TLSv1.3"
+    "support-protocols": "TLSv1.2,TLSv1.3",
+    "clientAuth": false,
+    "caKeyStoreFile": "cacerts",
+    "caKeyPassword": "changeit",
+    "crl": "CRL.der"
   },
   "services": [
     {
       "path": "/",
       "type": "normal",
       "id": "default",
-      "docsRoot": "src/test/resources/htdocs",
-      "config": "components.xml"
-    },
-    {
-      "path": "/test/",
-      "type": "reverse",
-      "id": "test",
-      "config": "components.xml",
-      "reverse": {
-        "url": "http://localhost:8080/test/"
-      }
+      "docsRoot": "src/test/resources/htdocs"
     },
     {
       "path": "/examples/",
       "type": "reverse",
       "id": "examples",
-      "config": "components.xml",
       "reverse": {
         "url": "http://localhost:8080/examples/"
-      },
-      "filters": {
-        "filter-1": {
-          "id": "filter-1",
-          "config": "components.xml"
-        }
-      }
-    },
-    {
-      "path": "/docs/",
-      "type": "reverse",
-      "id": "docs",
-      "config": "components.xml",
-      "reverse": {
-        "url": "http://localhost:8080/docs/"
       }
     }
   ]

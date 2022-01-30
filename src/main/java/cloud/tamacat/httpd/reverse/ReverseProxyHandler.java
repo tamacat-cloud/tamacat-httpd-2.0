@@ -1,0 +1,122 @@
+/*
+ * Copyright 2022 tamacat.org
+ * Licensed under the Apache License, Version 2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
+ */
+package cloud.tamacat.httpd.reverse;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.HttpException;
+import org.apache.hc.core5.http.HttpHeaders;
+import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.http.HttpVersion;
+import org.apache.hc.core5.http.impl.bootstrap.HttpRequester;
+import org.apache.hc.core5.http.io.HttpRequestHandler;
+import org.apache.hc.core5.http.message.BasicClassicHttpRequest;
+import org.apache.hc.core5.http.protocol.HttpContext;
+import org.apache.hc.core5.http.protocol.HttpCoreContext;
+import org.apache.hc.core5.util.Timeout;
+
+import cloud.tamacat.httpd.config.ReverseConfig;
+import cloud.tamacat.httpd.config.ServiceConfig;
+import cloud.tamacat.httpd.util.AccessLogUtils;
+import cloud.tamacat.httpd.util.ReverseUtils;
+import cloud.tamacat.httpd.util.TextUtils;
+import cloud.tamacat.log.Log;
+import cloud.tamacat.log.LogFactory;
+
+/**
+ * HTTP/1.1 reverse proxy using classic I/O.
+ * 
+ * @see
+ * https://github.com/apache/httpcomponents-core/blob/5.1.x/httpcore5/src/test/java/org/apache/hc/core5/http/examples/ClassicReverseProxyExample.java
+ */
+public class ReverseProxyHandler implements HttpRequestHandler {
+
+	static final Log ACCESS = LogFactory.getLog("Access");
+
+	final static Set<String> HOP_BY_HOP = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
+		TextUtils.toLowerCase(HttpHeaders.HOST),
+		TextUtils.toLowerCase(HttpHeaders.CONTENT_LENGTH),
+		TextUtils.toLowerCase(HttpHeaders.TRANSFER_ENCODING),
+		TextUtils.toLowerCase(HttpHeaders.CONNECTION),
+		TextUtils.toLowerCase(HttpHeaders.KEEP_ALIVE),
+		TextUtils.toLowerCase(HttpHeaders.PROXY_AUTHENTICATE),
+		TextUtils.toLowerCase(HttpHeaders.TE),
+		TextUtils.toLowerCase(HttpHeaders.TRAILER),
+		TextUtils.toLowerCase(HttpHeaders.UPGRADE)
+	)));
+
+	protected final HttpHost targetHost;
+	protected final HttpRequester requester;
+	protected final ReverseConfig reverseConfig;
+
+	public ReverseProxyHandler(final HttpHost targetHost, final HttpRequester requester, ServiceConfig serviceConfig) {
+		this.targetHost = targetHost;
+		this.requester = requester;
+		this.reverseConfig = serviceConfig.getReverse();
+	}
+
+	@Override
+	public void handle(final ClassicHttpRequest incomingRequest, final ClassicHttpResponse outgoingResponse,
+			final HttpContext serverContext) throws HttpException, IOException {
+		long startTime = System.currentTimeMillis();
+		final HttpCoreContext clientContext = HttpCoreContext.create();
+		
+		final String reverseTargetPath = ReverseUtils.getReverseTargetPath(reverseConfig, incomingRequest.getPath());
+
+		final ClassicHttpRequest outgoingRequest = new BasicClassicHttpRequest(
+				incomingRequest.getMethod(), targetHost, reverseTargetPath);
+		outgoingRequest.setVersion(HttpVersion.HTTP_1_1); //force HTTP/1.1
+
+		for (final Iterator<Header> it = incomingRequest.headerIterator(); it.hasNext();) {
+			final Header header = it.next();
+			if (!HOP_BY_HOP.contains(TextUtils.toLowerCase(header.getName()))) {
+				outgoingRequest.addHeader(header);
+			}
+		}
+		
+		ReverseUtils.appendHostHeader(outgoingRequest, reverseConfig);
+		ReverseUtils.rewriteHostHeader(outgoingRequest, serverContext, reverseConfig);
+		
+		//Add X-Forwarded headers
+		outgoingRequest.setHeader("X-Forwarded-For", AccessLogUtils.getRemoteAddress(serverContext));
+		outgoingRequest.setHeader("X-Forwarded-Proto", incomingRequest.getScheme());
+		
+		outgoingRequest.setEntity(incomingRequest.getEntity());
+		final ClassicHttpResponse incomingResponse = requester.execute(targetHost, outgoingRequest,
+				Timeout.ofMinutes(1), clientContext);
+		outgoingResponse.setCode(incomingResponse.getCode());
+		outgoingResponse.setVersion(incomingRequest.getVersion());
+
+		//Copy response headers
+		for (final Iterator<Header> it = incomingResponse.headerIterator(); it.hasNext();) {
+			final Header header = it.next();
+			if (!HOP_BY_HOP.contains(TextUtils.toLowerCase(header.getName()))) {
+				outgoingResponse.addHeader(header);
+			}
+		}
+		
+		ReverseUtils.rewriteStatusLine(outgoingRequest, outgoingResponse);
+		ReverseUtils.rewriteContentLocationHeader(outgoingRequest, outgoingResponse, reverseConfig);
+		ReverseUtils.rewriteServerHeader(outgoingResponse, reverseConfig);
+
+		//Location Header convert.
+		ReverseUtils.rewriteLocationHeader(outgoingRequest, outgoingResponse, reverseConfig);
+
+		//Set-Cookie Header convert.
+		ReverseUtils.rewriteSetCookieHeader(outgoingRequest, outgoingResponse, reverseConfig);
+		
+		outgoingResponse.setEntity(incomingResponse.getEntity());
+		AccessLogUtils.log(outgoingRequest, incomingResponse, clientContext, (System.currentTimeMillis()-startTime));
+	}
+}

@@ -39,7 +39,7 @@ import org.apache.hc.core5.reactor.IOReactorConfig;
 import org.apache.hc.core5.reactor.ListenerEndpoint;
 import org.apache.hc.core5.util.TimeValue;
 
-import cloud.tamacat.httpd.web.handler.FileServerRequestHandler;
+import cloud.tamacat.httpd.web.async.FileServerRequestHandler;
 import cloud.tamacat.log.Log;
 import cloud.tamacat.log.LogFactory;
 

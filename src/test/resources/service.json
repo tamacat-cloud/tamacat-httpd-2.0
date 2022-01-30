@@ -1,5 +1,5 @@
 {
-  "port": 80,
+  "port": 88,
   "host": "localhost",
   "maxTotal": 100,
   "maxPerRoute": 20,
@@ -10,14 +10,12 @@
       "path": "/",
       "type": "normal",
       "id": "default",
-      "docsRoot": "src/test/resources/htdocs",
-      "config": "components.xml"
+      "docsRoot": "src/test/resources/htdocs"
     },
     {
       "path": "/test/",
       "type": "reverse",
       "id": "test",
-      "config": "components.xml",
       "reverse": {
         "url": "http://localhost:8080/test/"
       }
@@ -26,22 +24,14 @@
       "path": "/examples/",
       "type": "reverse",
       "id": "examples",
-      "config": "components.xml",
       "reverse": {
         "url": "http://localhost:8080/examples/"
-      },
-      "filters": {
-        "filter-1": {
-          "id": "filter-1",
-          "config": "components.xml"
-        }
       }
     },
     {
       "path": "/docs/",
       "type": "reverse",
       "id": "docs",
-      "config": "components.xml",
       "reverse": {
         "url": "http://localhost:8080/docs/"
       }

@@ -6,7 +6,6 @@
 package cloud.tamacat.httpd.filter;
 
 import java.io.IOException;
-import java.util.Map;
 
 import org.apache.hc.core5.http.EntityDetails;
 import org.apache.hc.core5.http.HttpException;
@@ -21,33 +20,13 @@ import org.apache.hc.core5.http.protocol.HttpContext;
 
 import cloud.tamacat.log.Log;
 import cloud.tamacat.log.LogFactory;
-import cloud.tamacat.util.CollectionUtils;
-import cloud.tamacat.util.StringUtils;
 
 /**
  * Response Filter
  */
-public class ResponseFilter extends Filter {
+public class AsyncHtmlConvertFilter extends AsyncFilter {
 
-	static final Log LOG = LogFactory.getLog(ResponseFilter.class);
-	
-	protected Map<String, String> appendResponseHeaders = CollectionUtils.newLinkedHashMap();
-
-	/**
-	 * Append Response Headers.
-	 * ex) "Strict-Transport-Security: max-age=63072000; includeSubDomains; preload"
-	 * @param headerValue
-	 */
-	public void setAppendResponseHeader(String headerValue) {
-		String[] nameValue = StringUtils.split(headerValue, ":");
-		if (nameValue.length >= 2) {
-			String name = nameValue[0].trim();
-			String value = headerValue.replace(nameValue[0]+":", "").trim();
-			if (StringUtils.isNotEmpty(name) && StringUtils.isNotEmpty(value)) {
-				appendResponseHeaders.put(name, value);
-			}
-		}
-	}
+	static final Log LOG = LogFactory.getLog(AsyncHtmlConvertFilter.class);
 	
 	@Override
 	public AsyncDataConsumer handle(HttpRequest request, EntityDetails entityDetails, HttpContext context,
@@ -62,34 +41,23 @@ public class ResponseFilter extends Filter {
 
 			@Override
 			public void sendInformation(HttpResponse response) throws HttpException, IOException {
+				LOG.trace("#sendInformation");
 				responseTrigger.sendInformation(response);
 			}
 			
 			@Override
 			public void submitResponse(HttpResponse response, AsyncEntityProducer entityProducer)
 					throws HttpException, IOException {
-				//Append Response Headers (DO NOT Override exists headers)
-				if (appendResponseHeaders.size() >= 1) {
-					for (String name : appendResponseHeaders.keySet()) {
-						if (response.containsHeader(name) == false) {
-							String value = appendResponseHeaders.get(name);
-							response.setHeader(name, value);
-							LOG.trace("[set header] "+name+": "+value);
-						}
-					}
-				}
+				LOG.trace("#submitResponse");
+				
                 responseTrigger.submitResponse(response, entityProducer);
 			}
 
 			@Override
 			public void pushPromise(HttpRequest promise, AsyncPushProducer responseProducer) throws HttpException, IOException {
+				LOG.trace("#pushPromise");
                 responseTrigger.pushPromise(promise, responseProducer);
 			}
 		});
-	}
-
-	@Override
-	public String toString() {
-		return "ResponseFilter [appendResponseHeaders=" + appendResponseHeaders + ", path=" + path + "]";
 	}
 }

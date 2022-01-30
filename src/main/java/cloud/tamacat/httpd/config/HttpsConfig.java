@@ -13,6 +13,10 @@ public class HttpsConfig {
 	String protocol = "TLSv1_2";
 	String supportProtocol = "TLSv1_2";
 	String defaultAlias;
+	String caKeyStoreFile;
+	String caKeyPassword;
+	String crl;
+	
 	boolean clientAuth;
 
 	public String getKeyStoreFile() {
@@ -69,6 +73,30 @@ public class HttpsConfig {
 
 	public void setClientAuth(boolean clientAuth) {
 		this.clientAuth = clientAuth;
+	}
+
+	public String getCaKeyStoreFile() {
+		return caKeyStoreFile;
+	}
+
+	public void setCaKeyStoreFile(String caKeyStoreFile) {
+		this.caKeyStoreFile = caKeyStoreFile;
+	}
+	
+	public String getCaKeyPassword() {
+		return caKeyPassword;
+	}
+	
+	public void setCaKeyPassword(String caKeyPassword) {
+		this.caKeyPassword = caKeyPassword;
+	}
+	
+	public String getCrl() {
+		return crl;
+	}
+	
+	public void setCrl(String crl) {
+		this.crl = crl;
 	}
 
 	@Override

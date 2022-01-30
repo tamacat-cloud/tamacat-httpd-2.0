@@ -5,14 +5,14 @@
  */
 package cloud.tamacat.httpd.filter;
 
-import org.apache.hc.core5.http.io.HttpFilterHandler;
+import org.apache.hc.core5.http.nio.AsyncFilterHandler;
 
 import cloud.tamacat.httpd.config.ServiceConfig;
 
 /**
  * Request/Response Filter
  */
-public abstract class Filter implements HttpFilterHandler {
+public abstract class AsyncFilter implements AsyncFilterHandler {
 
 	protected ServiceConfig serviceConfig;
 	protected String path;
@@ -22,7 +22,7 @@ public abstract class Filter implements HttpFilterHandler {
 		this.path = serviceConfig.getPath();
 	}
 	
-	public Filter serverConfig(ServiceConfig serviceConfig) {
+	public AsyncFilter serverConfig(ServiceConfig serviceConfig) {
 		setServerConfig(serviceConfig);
 		return this;
 	}
