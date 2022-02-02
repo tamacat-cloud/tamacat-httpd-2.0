@@ -1,5 +1,5 @@
 {
-  "port": 88,
+  "port": 80,
   "host": "localhost",
   "maxTotal": 100,
   "maxPerRoute": 20,
@@ -29,6 +29,7 @@
       }
     },
     {
+      "host": "localhost",
       "path": "/docs/",
       "type": "reverse",
       "id": "docs",
