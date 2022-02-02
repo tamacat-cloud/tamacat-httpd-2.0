@@ -16,6 +16,7 @@ import org.apache.hc.core5.http.impl.bootstrap.HttpRequester;
 import org.apache.hc.core5.http.impl.bootstrap.HttpServer;
 import org.apache.hc.core5.http.impl.bootstrap.RequesterBootstrap;
 import org.apache.hc.core5.http.impl.bootstrap.ServerBootstrap;
+import org.apache.hc.core5.http.io.HttpRequestHandler;
 import org.apache.hc.core5.http.io.SocketConfig;
 import org.apache.hc.core5.http.ssl.TLS;
 import org.apache.hc.core5.http.ssl.TlsCiphers;
@@ -36,6 +37,7 @@ import cloud.tamacat.httpd.web.FileServerRequestHandler;
 import cloud.tamacat.httpd.web.ThymeleafServerRequestHandler;
 import cloud.tamacat.log.Log;
 import cloud.tamacat.log.LogFactory;
+import cloud.tamacat.util.StringUtils;
 
 /**
  * Embedded Classic I/O HTTP/1.1 server. configration: service.json
@@ -55,17 +57,18 @@ public class Httpd {
 		int port = config.getPort();
 
 		HttpRequester requester = createHttpRequester(config);
-
 		HttpServer server = createHttpServer(config, requester);
-
-		JettyManager.start();
+		if (config.useJetty()) {
+			JettyManager.start();
+		}
 
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
 			public void run() {
 				LOG.info(config.getServerName() + ":" + port + " shutting down");
-				JettyManager.stop();
-
+				if (config.useJetty()) {
+					JettyManager.stop();
+				}
 				server.close(CloseMode.GRACEFUL);
 				requester.close(CloseMode.GRACEFUL);
 			}
@@ -88,7 +91,8 @@ public class Httpd {
 		ServerBootstrap bootstrap = ServerBootstrap.bootstrap().setListenerPort(config.getPort())
 				.setHttpProcessor(HttpProcessors.customServer(config.getServerName()).build())
 				.setStreamListener(new TraceHttp1StreamListener("client<-httpd"))
-				.setSocketConfig(SocketConfig.custom().setSoTimeout(config.getSoTimeout(), TimeUnit.SECONDS).build());
+				.setSocketConfig(SocketConfig.custom()
+				.setSoTimeout(config.getSoTimeout(), TimeUnit.SECONDS).build());
 
 		LOG.trace(config.getHttpsConfig());
 
@@ -113,9 +117,9 @@ public class Httpd {
 
 			if (serviceConfig.isReverseProxy()) {
 				registerReverseProxy(serviceConfig, bootstrap, requester);
-			} else if ("jetty".equals(serviceConfig.getType())) {
+			} else if (serviceConfig.isJetty()) {
 				registerJettyEmbedded(serviceConfig, bootstrap, requester);
-			} else if ("thymeleaf".equals(serviceConfig.getType())) {
+			} else if (serviceConfig.isThymeleaf()) {
 				registerThymeleafServer(serviceConfig, bootstrap, requester);
 			} else {
 				registerFileServer(serviceConfig, bootstrap, requester);
@@ -133,48 +137,53 @@ public class Httpd {
 		return server;
 	}
 
-	protected void registerFileServer(ServiceConfig serviceConfig, ServerBootstrap bootstrap, HttpRequester requester) {
+	protected void register(ServiceConfig serviceConfig, ServerBootstrap bootstrap, HttpRequestHandler handler) {
 		try {
-			bootstrap.register(serviceConfig.getPath() + "*", new FileServerRequestHandler(serviceConfig));
+			if (StringUtils.isNotEmpty(serviceConfig.getHostname())) {
+				bootstrap.registerVirtual(serviceConfig.getHostname(), serviceConfig.getPath() + "*", handler);
+			} else {
+				bootstrap.register(serviceConfig.getPath() + "*", handler);
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			LOG.error(e.getMessage(), e);
 		}
 	}
-
-	protected void registerThymeleafServer(ServiceConfig serviceConfig, ServerBootstrap bootstrap,
-			HttpRequester requester) {
-		try {
-			bootstrap.register(serviceConfig.getPath() + "*", new ThymeleafServerRequestHandler(serviceConfig));
-		} catch (Exception e) {
-			LOG.error(e.getMessage(), e);
-		}
+	
+	protected void registerFileServer(ServiceConfig serviceConfig, ServerBootstrap bootstrap, HttpRequester requester) {
+		LOG.info("VirtualHost="+getVirtualHost(serviceConfig)+", path="+serviceConfig.getPath() +"* FileServer");
+		register(serviceConfig, bootstrap, new FileServerRequestHandler(serviceConfig));
 	}
 
-	protected void registerReverseProxy(ServiceConfig serviceConfig, ServerBootstrap bootstrap,
-			HttpRequester requester) {
+	protected void registerThymeleafServer(ServiceConfig serviceConfig, ServerBootstrap bootstrap, HttpRequester requester) {
+		LOG.info("VirtualHost="+getVirtualHost(serviceConfig)+", path="+serviceConfig.getPath() + "* ThymeleafServer");
+		register(serviceConfig, bootstrap, new ThymeleafServerRequestHandler(serviceConfig));
+	}
+
+	protected void registerReverseProxy(ServiceConfig serviceConfig, ServerBootstrap bootstrap, HttpRequester requester) {
 		try {
 			HttpHost targetHost = HttpHost.create(serviceConfig.getReverse().getTarget().toURI());
-			LOG.info(serviceConfig.getPath() + "* ReverseProxy to " + targetHost);
-			bootstrap.register(serviceConfig.getPath() + "*",
-					new ReverseProxyHandler(targetHost, requester, serviceConfig));
+			LOG.info("VirtualHost="+getVirtualHost(serviceConfig)+", path="+serviceConfig.getPath()+"* ReverseProxy to "+targetHost);
+			register(serviceConfig, bootstrap, new ReverseProxyHandler(targetHost, requester, serviceConfig));
 		} catch (Exception e) {
 			LOG.error(e.getMessage(), e);
 		}
 	}
 
-	protected void registerJettyEmbedded(ServiceConfig serviceConfig, ServerBootstrap bootstrap,
-			HttpRequester requester) {
+	protected void registerJettyEmbedded(ServiceConfig serviceConfig, ServerBootstrap bootstrap, HttpRequester requester) {
 		try {
 			JettyDeployment jettyDeploy = new JettyDeployment();
 			jettyDeploy.deploy(serviceConfig);
 
 			HttpHost targetHost = HttpHost.create(serviceConfig.getReverse().getTarget().toURI());
-			LOG.info(serviceConfig.getPath() + "* ReverseProxy+JettyEmbedded to " + targetHost);
-			bootstrap.register(serviceConfig.getPath() + "*",
-					new ReverseProxyHandler(targetHost, requester, serviceConfig));
+			LOG.info("VirtualHost="+getVirtualHost(serviceConfig)+", path="+serviceConfig.getPath() + "* ReverseProxy+JettyEmbedded to " + targetHost);
+			register(serviceConfig, bootstrap, new ReverseProxyHandler(targetHost, requester, serviceConfig));
 		} catch (Exception e) {
 			LOG.error(e.getMessage(), e);
 		}
+	}
+	
+	String getVirtualHost(ServiceConfig serviceConfig) {
+		return StringUtils.isNotEmpty(serviceConfig.getHostname()) ? serviceConfig.getHostname() : "default";
 	}
 }

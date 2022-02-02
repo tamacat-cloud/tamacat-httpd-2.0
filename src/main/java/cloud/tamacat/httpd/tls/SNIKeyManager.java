@@ -39,6 +39,7 @@ public class SNIKeyManager extends X509ExtendedKeyManager {
 		for (SNIServerName name : session.getRequestedServerNames()) {
 			if (name.getType() == StandardConstants.SNI_HOST_NAME) {
 				String hostname = ((SNIHostName) name).getAsciiName();
+				LOG.trace("chooseEngineServerAlias="+hostname);
 				return getCertificateHostname(hostname);
 			}
 		}
@@ -57,6 +58,7 @@ public class SNIKeyManager extends X509ExtendedKeyManager {
 			for (SNIServerName name : session.getRequestedServerNames()) {
 				if (name.getType() == StandardConstants.SNI_HOST_NAME) {
 					String hostname = ((SNIHostName)name).getAsciiName();
+					LOG.trace("chooseServerAlias="+hostname);
 					return getCertificateHostname(hostname);
 				}
 			}

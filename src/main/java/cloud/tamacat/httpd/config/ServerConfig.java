@@ -165,6 +165,13 @@ public class ServerConfig implements Serializable {
 	public void setServices(Collection<ServiceConfig> services) {
 		this.services = services;
 	}
+	
+	public boolean useJetty() {
+		for (ServiceConfig service : services) {
+			if (service.type.equals("jetty")) return true;
+		}
+		return false;
+	}
 
 	@Override
 	public String toString() {

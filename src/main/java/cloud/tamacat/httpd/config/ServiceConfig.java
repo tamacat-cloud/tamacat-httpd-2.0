@@ -69,6 +69,10 @@ public class ServiceConfig {
 		return serverConfig;
 	}
 	
+	public String getHostname() {
+		return host;
+	}
+	
 	public URL getHost() {
 		try {
 			return new URL(host);
@@ -141,8 +145,20 @@ public class ServiceConfig {
 	}
 
 	public boolean isReverseProxy() {
-		return "reverse".equals(type) 
+		return isType("reverse") 
 			&& (reverses.size()>=1 || (reverse != null && StringUtils.isNotEmpty(reverse.getUrl())));
+	}
+	
+	public boolean isType(String name) {
+		return (name).equals(this.type);
+	}
+	
+	public boolean isJetty() {
+		return isType("jetty");
+	}
+	
+	public boolean isThymeleaf() {
+		return isType("thymeleaf");
 	}
 	
 	public ReverseConfig getReverse() {

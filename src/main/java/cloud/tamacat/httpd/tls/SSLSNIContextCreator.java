@@ -16,10 +16,10 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.X509ExtendedKeyManager;
 
 import cloud.tamacat.httpd.config.ServerConfig;
+import cloud.tamacat.httpd.error.InternalServerErrorException;
 import cloud.tamacat.log.Log;
 import cloud.tamacat.log.LogFactory;
 import cloud.tamacat.util.ClassUtils;
-import cloud.tamacat.util.RuntimeIOException;
 import cloud.tamacat.util.StringUtils;
 
 /**
@@ -72,10 +72,10 @@ public class SSLSNIContextCreator extends DefaultSSLContextCreator {
 			}
 			SSLContext sslcontext = SSLContext.getInstance(protocol.version.getProtocol());
 			if (x509KeyManager == null) {
-				sslcontext.init(keymanagers, null, null);
+				sslcontext.init(keymanagers, getTrustManager(), null);
 			} else {
 				SNIKeyManager sniKeyManager = new SNIKeyManager(x509KeyManager, defaultAlias);
-				sslcontext.init(new KeyManager[] { sniKeyManager }, null, null);
+				sslcontext.init(new KeyManager[] { sniKeyManager }, getTrustManager(), null);
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("TLS/SNI default=" + defaultAlias);
 					Enumeration<String> en = keystore.aliases();
@@ -86,7 +86,8 @@ public class SSLSNIContextCreator extends DefaultSSLContextCreator {
 			}
 			return sslcontext;
 		} catch (Exception e) {
-			throw new RuntimeIOException(e);
+			throw new InternalServerErrorException(e);
+			//throw new RuntimeIOException(e);
 		}
 	}
 
