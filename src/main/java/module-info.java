@@ -30,5 +30,9 @@ module cloud.tamacat.httpd {
 	requires transitive org.slf4j;
 	
 	requires org.eclipse.jetty.server;
+	requires org.eclipse.jetty.servlet;
 	requires org.eclipse.jetty.webapp;
+	requires org.eclipse.jetty.apache.jsp;
+	requires org.mortbay.apache.jasper;
+	
 }

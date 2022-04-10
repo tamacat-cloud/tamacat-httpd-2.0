@@ -70,13 +70,13 @@ public class AsyncHttpd {
 		HttpAsyncServer server = createHttpAsyncServer(config, reactor, requester);
 		int port = config.getPort();
 
-		JettyManager.start();
+		JettyManager.getInstance().start();
 
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
 			public void run() {
 				LOG.info(config.getServerName()+":"+port+" shutting down");
-				JettyManager.stop();
+				JettyManager.getInstance().stop();
 				
 				server.close(CloseMode.GRACEFUL);
 				requester.close(CloseMode.GRACEFUL);

@@ -59,7 +59,7 @@ public class Httpd {
 		HttpRequester requester = createHttpRequester(config);
 		HttpServer server = createHttpServer(config, requester);
 		if (config.useJetty()) {
-			JettyManager.start();
+			JettyManager.getInstance().start();
 		}
 
 		Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -67,7 +67,7 @@ public class Httpd {
 			public void run() {
 				LOG.info(config.getServerName() + ":" + port + " shutting down");
 				if (config.useJetty()) {
-					JettyManager.stop();
+					JettyManager.getInstance().stop();
 				}
 				server.close(CloseMode.GRACEFUL);
 				requester.close(CloseMode.GRACEFUL);
