@@ -181,7 +181,7 @@ public class ServerConfig implements Serializable {
 	}
 
 	public static ServerConfig load(String json) {
-		return JsonUtils.fromJsonInClasspath(json, ServerConfig.class);
+		return JsonUtils.fromJsonInFileOrClasspathInputStream(json, ServerConfig.class);
 	}
 
 	public String toJson() {
