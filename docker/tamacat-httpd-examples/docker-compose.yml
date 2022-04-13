@@ -1,0 +1,11 @@
+version: "3.8"
+
+services:
+  tamacat-httpd-examples:
+    build: ./
+    ports:
+      - "80:80"
+    #[optional]
+    #environment:
+    #  - SERVICE_JSON=service.json
+    #  - BIND_PORT=80
