@@ -88,10 +88,14 @@ public class Httpd {
 	protected HttpServer createHttpServer(ServerConfig config, HttpRequester requester) {
 		Collection<ServiceConfig> configs = config.getServices();
 
-		ServerBootstrap bootstrap = ServerBootstrap.bootstrap().setListenerPort(config.getPort())
+		ServerBootstrap bootstrap = ServerBootstrap.bootstrap()
+				.setCanonicalHostName(config.getHost())
+				.setListenerPort(config.getPort())
 				.setHttpProcessor(HttpProcessors.customServer(config.getServerName()).build())
 				.setStreamListener(new TraceHttp1StreamListener("client<-httpd"))
 				.setSocketConfig(SocketConfig.custom()
+				//.setSoKeepAlive(config.keepAlive())
+				//.setSoReuseAddress(true)
 				.setSoTimeout(config.getSoTimeout(), TimeUnit.SECONDS).build());
 
 		LOG.trace(config.getHttpsConfig());
@@ -125,20 +129,21 @@ public class Httpd {
 				registerFileServer(serviceConfig, bootstrap, requester);
 			}
 
-			// add filter
+			// add filters
 			serviceConfig.getFilters().forEach((id, filter) -> {
 				bootstrap.addFilterFirst(id, filter.getFilter(serviceConfig));
 			});
 		}
 
-		bootstrap.setStreamListener(new TraceHttp1StreamListener());
-		bootstrap.setExceptionListener(new TraceExceptionListener());
+		bootstrap.setStreamListener(new TraceHttp1StreamListener())
+				 .setExceptionListener(new TraceExceptionListener());
 		HttpServer server = bootstrap.create();
 		return server;
 	}
 
 	protected void register(ServiceConfig serviceConfig, ServerBootstrap bootstrap, HttpRequestHandler handler) {
 		try {
+			LOG.debug("hostname="+serviceConfig.getHostname());
 			if (StringUtils.isNotEmpty(serviceConfig.getHostname())) {
 				bootstrap.registerVirtual(serviceConfig.getHostname(), serviceConfig.getPath() + "*", handler);
 			} else {
