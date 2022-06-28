@@ -1,0 +1,8 @@
+
+docker build -t tamacat/tamacat-httpd:2.0-latest .
+
+docker run --rm -it -d -p 80:80 -t tamacat/tamacat-httpd:2.0-latest
+
+docker build -t tamacat/tamacat-httpd:2.0-jre17-latest -f Dockerfile .
+
+docker run --rm -it -d -p 80:80 -t tamacat/tamacat-httpd:2.0-jre17-latest

@@ -49,6 +49,10 @@ public class ServerConfig implements Serializable {
 	@SerializedName("keepAlive")
 	@Expose
 	boolean keepAlive = true;
+
+	@SerializedName("soReuseAddress")
+	@Expose
+	boolean soReuseAddress;
 	
 	@SerializedName("services")
 	@Expose
@@ -100,6 +104,10 @@ public class ServerConfig implements Serializable {
 
 	public boolean keepAlive() {
 		return keepAlive;
+	}
+	
+	public boolean soReuseAddress() {
+		return soReuseAddress;
 	}
 	
 	public ServerConfig host(String host) {

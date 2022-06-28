@@ -42,7 +42,7 @@ import cloud.tamacat.log.LogFactory;
  */
 public class ReverseProxyHandler implements HttpRequestHandler {
 
-	static final Log ACCESS = LogFactory.getLog("Access");
+	static final Log LOG = LogFactory.getLog(ReverseProxyHandler.class);
 
 	final static Set<String> HOP_BY_HOP = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
 		TextUtils.toLowerCase(HttpHeaders.HOST),
@@ -93,11 +93,12 @@ public class ReverseProxyHandler implements HttpRequestHandler {
 		outgoingRequest.setHeader("X-Forwarded-Proto", incomingRequest.getScheme());
 		
 		outgoingRequest.setEntity(incomingRequest.getEntity());
-		final ClassicHttpResponse incomingResponse = requester.execute(targetHost, outgoingRequest,
-				Timeout.ofMinutes(1), clientContext);
+		final ClassicHttpResponse incomingResponse = requester.execute(targetHost, outgoingRequest, Timeout.ofMinutes(1), clientContext);
 		outgoingResponse.setCode(incomingResponse.getCode());
 		outgoingResponse.setVersion(incomingRequest.getVersion());
-
+		//Backend access log
+		AccessLogUtils.log(LOG, outgoingRequest, outgoingResponse, clientContext, (System.currentTimeMillis()-startTime));
+		
 		//Copy response headers
 		for (final Iterator<Header> it = incomingResponse.headerIterator(); it.hasNext();) {
 			final Header header = it.next();
@@ -117,6 +118,6 @@ public class ReverseProxyHandler implements HttpRequestHandler {
 		ReverseUtils.rewriteSetCookieHeader(outgoingRequest, outgoingResponse, reverseConfig);
 		
 		outgoingResponse.setEntity(incomingResponse.getEntity());
-		AccessLogUtils.log(outgoingRequest, incomingResponse, clientContext, (System.currentTimeMillis()-startTime));
+		AccessLogUtils.log(incomingRequest, incomingResponse, clientContext, (System.currentTimeMillis()-startTime));
 	}
 }

@@ -31,4 +31,8 @@ public class AccessLogUtils {
 	public static void log(HttpRequest req, HttpResponse resp, HttpContext context, long responseTime) {
 		ACCESS.info(getRemoteAddress(context) +" "+ req+ " "+resp.getCode() + " "+ responseTime+"ms");
 	}
+	
+	public static void log(Log log, HttpRequest req, HttpResponse resp, HttpContext context, long responseTime) {
+		log.info(getRemoteAddress(context) +" "+ req+ " "+resp.getCode() + " "+ responseTime+"ms");
+	}
 }

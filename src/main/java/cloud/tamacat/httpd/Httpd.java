@@ -94,8 +94,8 @@ public class Httpd {
 				.setHttpProcessor(HttpProcessors.customServer(config.getServerName()).build())
 				.setStreamListener(new TraceHttp1StreamListener("client<-httpd"))
 				.setSocketConfig(SocketConfig.custom()
-				//.setSoKeepAlive(config.keepAlive())
-				//.setSoReuseAddress(true)
+				.setSoKeepAlive(config.keepAlive())
+				.setSoReuseAddress(config.soReuseAddress())
 				.setSoTimeout(config.getSoTimeout(), TimeUnit.SECONDS).build());
 
 		LOG.trace(config.getHttpsConfig());
