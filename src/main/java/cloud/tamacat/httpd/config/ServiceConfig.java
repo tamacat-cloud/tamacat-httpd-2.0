@@ -13,6 +13,7 @@ import java.util.Map;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import cloud.tamacat.httpd.util.ServerUtils;
 import cloud.tamacat.util.CollectionUtils;
 import cloud.tamacat.util.JsonUtils;
 import cloud.tamacat.util.StringUtils;
@@ -64,7 +65,8 @@ public class ServiceConfig {
 	Map<String, FilterConfig> filters = CollectionUtils.newLinkedHashMap();
 
 	protected ServerConfig serverConfig;
-	
+	protected String serverHome;
+
 	public void setServerConfig(ServerConfig serverConfig) {
 		this.serverConfig = serverConfig;
 	}
@@ -140,6 +142,9 @@ public class ServiceConfig {
 	}
 	
 	public String getDocsRoot() {
+		if (docsRoot.indexOf("${server.home}") >= 0) {
+			this.docsRoot = docsRoot.replace("${server.home}", getServerHome()).replace("\\", "/");
+		}
 		return docsRoot;
 	}
 
@@ -211,5 +216,12 @@ public class ServiceConfig {
 
 	public String toJson() {
 		return JsonUtils.toJson(this);
+	}
+	
+	protected String getServerHome() {
+		if (StringUtils.isEmpty(serverHome)) {
+			serverHome = ServerUtils.getServerHome();
+		}
+		return serverHome;
 	}
 }
