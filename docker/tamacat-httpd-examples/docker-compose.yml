@@ -7,5 +7,6 @@ services:
       - "80:80"
     #[optional]
     #environment:
-    #  - SERVICE_JSON=service.json
-    #  - BIND_PORT=80
+    # - SERVER_HOME=/usr/local/tamacat-httpd
+    # - SERVICE_JSON=service.json
+    # - BIND_PORT=80

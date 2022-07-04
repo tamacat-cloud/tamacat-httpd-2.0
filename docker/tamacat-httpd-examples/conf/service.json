@@ -8,12 +8,14 @@
   "keepAlive": true,
   "services": [
     {
+      "host": "localhost",
       "path": "/",
       "type": "thymeleaf",
       "id": "default",
-      "docsRoot": "htdocs/root"
+      "docsRoot": "${server.home}/htdocs/root"
     },
     {
+      "host": "localhost",
       "path": "/examples/",
       "type": "jetty",
       "id": "examples",
