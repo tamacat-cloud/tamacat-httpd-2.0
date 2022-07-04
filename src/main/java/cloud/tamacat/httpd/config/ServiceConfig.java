@@ -47,6 +47,10 @@ public class ServiceConfig {
 	@Expose
 	String docsRoot;
 	
+	@SerializedName("listings")
+	@Expose
+	boolean listings;
+	
 	@SerializedName("reverse")
 	@Expose
 	ReverseConfig reverse = new ReverseConfig();
@@ -143,7 +147,11 @@ public class ServiceConfig {
 		this.docsRoot = docsRoot;
 		return this;
 	}
-
+	
+	public boolean isListings() {
+		return listings;
+	}
+	
 	public boolean isReverseProxy() {
 		return isType("reverse") 
 			&& (reverses.size()>=1 || (reverse != null && StringUtils.isNotEmpty(reverse.getUrl())));
