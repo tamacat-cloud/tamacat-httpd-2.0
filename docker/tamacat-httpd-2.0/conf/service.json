@@ -11,7 +11,7 @@
       "path": "/",
       "type": "thymeleaf",
       "id": "default",
-      "docsRoot": "htdocs/root"
+      "docsRoot": "${server.home}/htdocs/root"
     }
   ]
 }

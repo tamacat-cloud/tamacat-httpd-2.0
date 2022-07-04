@@ -2,6 +2,8 @@ FROM eclipse-temurin:17-jre-alpine
 
 #LABEL maintainer="tamacat.org"
 
+USER root
+
 RUN apk update && apk upgrade && apk add --no-cache \
     bash \
     curl
@@ -20,5 +22,7 @@ ENV SERVICE_JSON="service.json"
 ENV BIND_PORT=80
 
 EXPOSE ${BIND_PORT}
+
+USER 1001
 
 CMD java cloud.tamacat.httpd.Httpd ${SERVICE_JSON}
