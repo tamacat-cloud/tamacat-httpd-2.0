@@ -3,7 +3,7 @@ The tamacat-httpd-2.0 is a open source Java Web Server software, powered by "Apa
 
 This is a customizable HTTP/HTTPS Server framework.
 
-<a href="https://tamacat.org/">https://tamacat.org/</a>
+<a href="https://tamacat.cloud/">https://tamacat.cloud/</a>
 
 ### Features:
 - Standards based, pure Java HTTP Server, implementation of HTTP versions 1.0 and 1.1
