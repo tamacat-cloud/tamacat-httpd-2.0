@@ -12,9 +12,7 @@ import javax.net.ssl.SSLContext;
 
 import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.impl.HttpProcessors;
-import org.apache.hc.core5.http.impl.bootstrap.HttpRequester;
 import org.apache.hc.core5.http.impl.bootstrap.HttpServer;
-import org.apache.hc.core5.http.impl.bootstrap.RequesterBootstrap;
 import org.apache.hc.core5.http.impl.bootstrap.ServerBootstrap;
 import org.apache.hc.core5.http.io.HttpRequestHandler;
 import org.apache.hc.core5.http.io.SocketConfig;
@@ -28,7 +26,6 @@ import cloud.tamacat.httpd.config.ServerConfig;
 import cloud.tamacat.httpd.config.ServiceConfig;
 import cloud.tamacat.httpd.jetty.JettyDeployment;
 import cloud.tamacat.httpd.jetty.JettyManager;
-import cloud.tamacat.httpd.listener.TraceConnPoolListener;
 import cloud.tamacat.httpd.listener.TraceExceptionListener;
 import cloud.tamacat.httpd.listener.TraceHttp1StreamListener;
 import cloud.tamacat.httpd.reverse.ReverseProxyHandler;
@@ -56,8 +53,7 @@ public class Httpd {
 		ServerConfig config = ServerConfig.load(json);
 		int port = config.getPort();
 
-		HttpRequester requester = createHttpRequester(config);
-		HttpServer server = createHttpServer(config, requester);
+		HttpServer server = createHttpServer(config);
 		if (config.useJetty()) {
 			JettyManager.getInstance().start();
 		}
@@ -70,7 +66,6 @@ public class Httpd {
 					JettyManager.getInstance().stop();
 				}
 				server.close(CloseMode.GRACEFUL);
-				requester.close(CloseMode.GRACEFUL);
 			}
 		});
 
@@ -79,13 +74,7 @@ public class Httpd {
 		server.awaitTermination(TimeValue.MAX_VALUE);
 	}
 
-	protected HttpRequester createHttpRequester(ServerConfig config) {
-		return RequesterBootstrap.bootstrap().setConnPoolListener(new TraceConnPoolListener())
-				.setStreamListener(new TraceHttp1StreamListener()).setMaxTotal(config.getMaxTotal())
-				.setDefaultMaxPerRoute(config.getMaxParRoute()).create();
-	}
-
-	protected HttpServer createHttpServer(ServerConfig config, HttpRequester requester) {
+	protected HttpServer createHttpServer(ServerConfig config) {
 		Collection<ServiceConfig> configs = config.getServices();
 
 		ServerBootstrap bootstrap = ServerBootstrap.bootstrap()
@@ -118,15 +107,14 @@ public class Httpd {
 			if (serviceConfig == null) continue;
 
 			serviceConfig.setServerConfig(config);
-
 			if (serviceConfig.isReverseProxy()) {
-				registerReverseProxy(serviceConfig, bootstrap, requester);
+				registerReverseProxy(serviceConfig, bootstrap);
 			} else if (serviceConfig.isJetty()) {
-				registerJettyEmbedded(serviceConfig, bootstrap, requester);
+				registerJettyEmbedded(serviceConfig, bootstrap);
 			} else if (serviceConfig.isThymeleaf()) {
-				registerThymeleafServer(serviceConfig, bootstrap, requester);
+				registerThymeleafServer(serviceConfig, bootstrap);
 			} else {
-				registerFileServer(serviceConfig, bootstrap, requester);
+				registerFileServer(serviceConfig, bootstrap);
 			}
 
 			// add filters
@@ -155,40 +143,40 @@ public class Httpd {
 		}
 	}
 	
-	protected void registerFileServer(ServiceConfig serviceConfig, ServerBootstrap bootstrap, HttpRequester requester) {
+	protected void registerFileServer(ServiceConfig serviceConfig, ServerBootstrap bootstrap) {
 		LOG.info("VirtualHost="+getVirtualHost(serviceConfig)+", path="+serviceConfig.getPath() +"* FileServer");
 		register(serviceConfig, bootstrap, new FileServerRequestHandler(serviceConfig));
 	}
 
-	protected void registerThymeleafServer(ServiceConfig serviceConfig, ServerBootstrap bootstrap, HttpRequester requester) {
+	protected void registerThymeleafServer(ServiceConfig serviceConfig, ServerBootstrap bootstrap) {
 		LOG.info("VirtualHost="+getVirtualHost(serviceConfig)+", path="+serviceConfig.getPath() + "* ThymeleafServer");
 		register(serviceConfig, bootstrap, new ThymeleafServerRequestHandler(serviceConfig));
 	}
 
-	protected void registerReverseProxy(ServiceConfig serviceConfig, ServerBootstrap bootstrap, HttpRequester requester) {
+	protected void registerReverseProxy(ServiceConfig serviceConfig, ServerBootstrap bootstrap) {
 		try {
 			HttpHost targetHost = HttpHost.create(serviceConfig.getReverse().getTarget().toURI());
 			LOG.info("VirtualHost="+getVirtualHost(serviceConfig)+", path="+serviceConfig.getPath()+"* ReverseProxy to "+targetHost);
-			register(serviceConfig, bootstrap, new ReverseProxyHandler(targetHost, requester, serviceConfig));
+			register(serviceConfig, bootstrap, new ReverseProxyHandler(targetHost, serviceConfig));
 		} catch (Exception e) {
 			LOG.error(e.getMessage(), e);
 		}
 	}
 
-	protected void registerJettyEmbedded(ServiceConfig serviceConfig, ServerBootstrap bootstrap, HttpRequester requester) {
+	protected void registerJettyEmbedded(ServiceConfig serviceConfig, ServerBootstrap bootstrap) {
 		try {
 			JettyDeployment jettyDeploy = new JettyDeployment();
 			jettyDeploy.deploy(serviceConfig);
 
 			HttpHost targetHost = HttpHost.create(serviceConfig.getReverse().getTarget().toURI());
 			LOG.info("VirtualHost="+getVirtualHost(serviceConfig)+", path="+serviceConfig.getPath() + "* ReverseProxy+JettyEmbedded to " + targetHost);
-			register(serviceConfig, bootstrap, new ReverseProxyHandler(targetHost, requester, serviceConfig));
+			register(serviceConfig, bootstrap, new ReverseProxyHandler(targetHost, serviceConfig));
 		} catch (Exception e) {
 			LOG.error(e.getMessage(), e);
 		}
 	}
 	
-	String getVirtualHost(ServiceConfig serviceConfig) {
+	protected String getVirtualHost(ServiceConfig serviceConfig) {
 		return StringUtils.isNotEmpty(serviceConfig.getHostname()) ? serviceConfig.getHostname() : "default";
 	}
 }

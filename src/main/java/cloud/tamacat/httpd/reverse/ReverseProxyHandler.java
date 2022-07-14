@@ -20,14 +20,18 @@ import org.apache.hc.core5.http.HttpHeaders;
 import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.HttpVersion;
 import org.apache.hc.core5.http.impl.bootstrap.HttpRequester;
+import org.apache.hc.core5.http.impl.bootstrap.RequesterBootstrap;
 import org.apache.hc.core5.http.io.HttpRequestHandler;
 import org.apache.hc.core5.http.message.BasicClassicHttpRequest;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.apache.hc.core5.http.protocol.HttpCoreContext;
+import org.apache.hc.core5.util.TimeValue;
 import org.apache.hc.core5.util.Timeout;
 
 import cloud.tamacat.httpd.config.ReverseConfig;
 import cloud.tamacat.httpd.config.ServiceConfig;
+import cloud.tamacat.httpd.listener.TraceConnPoolListener;
+import cloud.tamacat.httpd.listener.TraceHttp1StreamListener;
 import cloud.tamacat.httpd.util.AccessLogUtils;
 import cloud.tamacat.httpd.util.ReverseUtils;
 import cloud.tamacat.httpd.util.TextUtils;
@@ -57,23 +61,24 @@ public class ReverseProxyHandler implements HttpRequestHandler {
 	)));
 
 	protected final HttpHost targetHost;
-	protected final HttpRequester requester;
+	protected final ServiceConfig serviceConfig;
 	protected final ReverseConfig reverseConfig;
-
-	public ReverseProxyHandler(final HttpHost targetHost, final HttpRequester requester, ServiceConfig serviceConfig) {
+	protected final RequesterBootstrap requesterBootstrap;
+	
+	public ReverseProxyHandler(final HttpHost targetHost, final ServiceConfig serviceConfig) {
 		this.targetHost = targetHost;
-		this.requester = requester;
+		this.serviceConfig = serviceConfig;
 		this.reverseConfig = serviceConfig.getReverse();
+		this.requesterBootstrap = createRequesterBootstrap();
 	}
 
 	@Override
 	public void handle(final ClassicHttpRequest incomingRequest, final ClassicHttpResponse outgoingResponse,
 			final HttpContext serverContext) throws HttpException, IOException {
-		long startTime = System.currentTimeMillis();
+		final long startTime = System.currentTimeMillis();
 		final HttpCoreContext clientContext = HttpCoreContext.create();
 		
 		final String reverseTargetPath = ReverseUtils.getReverseTargetPath(reverseConfig, incomingRequest.getPath());
-
 		final ClassicHttpRequest outgoingRequest = new BasicClassicHttpRequest(
 				incomingRequest.getMethod(), targetHost, reverseTargetPath);
 		outgoingRequest.setVersion(HttpVersion.HTTP_1_1); //force HTTP/1.1
@@ -93,12 +98,21 @@ public class ReverseProxyHandler implements HttpRequestHandler {
 		outgoingRequest.setHeader("X-Forwarded-Proto", incomingRequest.getScheme());
 		
 		outgoingRequest.setEntity(incomingRequest.getEntity());
-		final ClassicHttpResponse incomingResponse = requester.execute(targetHost, outgoingRequest, Timeout.ofMinutes(1), clientContext);
+		final HttpRequester requester = requesterBootstrap.create();
+		LOG.debug("[proxy->origin] ConnPool: "+requester.getConnPoolControl().getTotalStats());
+		//Runtime.getRuntime().addShutdownHook(new Thread() {
+		//	@Override
+		//	public void run() {
+		//		requester.close(CloseMode.GRACEFUL);
+		//	}
+		//});
+		final ClassicHttpResponse incomingResponse = requester.execute(targetHost, outgoingRequest, Timeout.ofMinutes(3), clientContext);
+		
 		outgoingResponse.setCode(incomingResponse.getCode());
 		outgoingResponse.setVersion(incomingRequest.getVersion());
 		//Backend access log
 		AccessLogUtils.log(LOG, outgoingRequest, outgoingResponse, clientContext, (System.currentTimeMillis()-startTime));
-		
+			
 		//Copy response headers
 		for (final Iterator<Header> it = incomingResponse.headerIterator(); it.hasNext();) {
 			final Header header = it.next();
@@ -107,17 +121,30 @@ public class ReverseProxyHandler implements HttpRequestHandler {
 			}
 		}
 		
+		//Rewite Response
+		rewriteResponseHeaders(outgoingRequest, outgoingResponse);
 		ReverseUtils.rewriteStatusLine(outgoingRequest, outgoingResponse);
-		ReverseUtils.rewriteContentLocationHeader(outgoingRequest, outgoingResponse, reverseConfig);
-		ReverseUtils.rewriteServerHeader(outgoingResponse, reverseConfig);
 
-		//Location Header convert.
-		ReverseUtils.rewriteLocationHeader(outgoingRequest, outgoingResponse, reverseConfig);
-
-		//Set-Cookie Header convert.
-		ReverseUtils.rewriteSetCookieHeader(outgoingRequest, outgoingResponse, reverseConfig);
-		
 		outgoingResponse.setEntity(incomingResponse.getEntity());
 		AccessLogUtils.log(incomingRequest, incomingResponse, clientContext, (System.currentTimeMillis()-startTime));
+		
+		requester.closeIdle(TimeValue.ofMilliseconds(3000));
+	}
+	
+	protected void rewriteResponseHeaders(final ClassicHttpRequest outgoingRequest, final ClassicHttpResponse outgoingResponse) {
+		ReverseUtils.rewriteContentLocationHeader(outgoingRequest, outgoingResponse, reverseConfig);
+		ReverseUtils.rewriteServerHeader(outgoingResponse, reverseConfig);
+	
+		//Location Header convert.
+		ReverseUtils.rewriteLocationHeader(outgoingRequest, outgoingResponse, reverseConfig);
+	
+		//Set-Cookie Header convert.
+		ReverseUtils.rewriteSetCookieHeader(outgoingRequest, outgoingResponse, reverseConfig);
+	}
+	
+	protected RequesterBootstrap createRequesterBootstrap() {
+		return RequesterBootstrap.bootstrap().setConnPoolListener(new TraceConnPoolListener())
+				.setStreamListener(new TraceHttp1StreamListener()).setMaxTotal(serviceConfig.getServerConfig().getMaxTotal())
+				.setDefaultMaxPerRoute(serviceConfig.getServerConfig().getMaxParRoute());
 	}
 }

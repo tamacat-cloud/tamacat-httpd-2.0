@@ -21,6 +21,8 @@ import org.apache.hc.core5.http.io.entity.HttpEntityWrapper;
 
 import cloud.tamacat.httpd.util.EncodeUtils;
 import cloud.tamacat.httpd.util.HtmlUtils;
+import cloud.tamacat.log.Log;
+import cloud.tamacat.log.LogFactory;
 import cloud.tamacat.util.IOUtils;
 
 /**
@@ -28,6 +30,8 @@ import cloud.tamacat.util.IOUtils;
  */
 public class LinkConvertingEntity extends HttpEntityWrapper {
 
+	static final Log LOG = LogFactory.getLog(LinkConvertingEntity.class);
+	
 	protected int bufferSize = 8192; //8KB
 	protected String before;
 	protected String after;
@@ -108,6 +112,9 @@ public class LinkConvertingEntity extends HttpEntityWrapper {
 				contentLength = length;
 			}
 			writer.flush();
+		} catch (IOException e) {
+			LOG.warn(e.getMessage(), e);
+			throw e;
 		} finally {
 			IOUtils.close(reader);
 			IOUtils.close(writer);
