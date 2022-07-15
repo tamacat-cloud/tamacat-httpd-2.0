@@ -150,7 +150,7 @@ public class ReverseProxy {
 			}
 
 		})
-		.register(serviceConfig.getPath()+"*", () -> new IncomingExchangeHandler(targetHost, requester, serviceConfig))
+		.register(serviceConfig.getPath()+"*", () -> new IncomingExchangeHandler(targetHost, serviceConfig))
 		.create();
 
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> {

@@ -43,17 +43,17 @@ public class Httpd {
 
 	static final Log LOG = LogFactory.getLog(Httpd.class);
 
-	public static void main(String[] args) throws Exception {
-		Httpd server = new Httpd();
+	public static void main(final String[] args) throws Exception {
+		final Httpd server = new Httpd();
 		server.startup(args);
 	}
 
-	public void startup(String... args) throws Exception {
-		String json = args.length >= 1 ? args[0] : "service.json";
-		ServerConfig config = ServerConfig.load(json);
-		int port = config.getPort();
+	public void startup(final String... args) throws Exception {
+		final String json = args.length >= 1 ? args[0] : "service.json";
+		final ServerConfig config = ServerConfig.load(json);
+		final int port = config.getPort();
 
-		HttpServer server = createHttpServer(config);
+		final HttpServer server = createHttpServer(config);
 		if (config.useJetty()) {
 			JettyManager.getInstance().start();
 		}
@@ -74,10 +74,10 @@ public class Httpd {
 		server.awaitTermination(TimeValue.MAX_VALUE);
 	}
 
-	protected HttpServer createHttpServer(ServerConfig config) {
-		Collection<ServiceConfig> configs = config.getServices();
+	protected HttpServer createHttpServer(final ServerConfig config) {
+		final Collection<ServiceConfig> configs = config.getServices();
 
-		ServerBootstrap bootstrap = ServerBootstrap.bootstrap()
+		final ServerBootstrap bootstrap = ServerBootstrap.bootstrap()
 				.setCanonicalHostName(config.getHost())
 				.setListenerPort(config.getPort())
 				.setHttpProcessor(HttpProcessors.customServer(config.getServerName()).build())
@@ -91,8 +91,8 @@ public class Httpd {
 
 		// HTTPS
 		if (config.useHttps()) {
-			HttpsConfig https = config.getHttpsConfig();
-			SSLContext sslContext = new SSLSNIContextCreator(config).getSSLContext();
+			final HttpsConfig https = config.getHttpsConfig();
+			final SSLContext sslContext = new SSLSNIContextCreator(config).getSSLContext();
 			bootstrap.setSslSetupHandler(sslParameters -> {
 				sslParameters.setProtocols(TLS.excludeWeak(sslParameters.getProtocols()));
 				sslParameters.setCipherSuites(TlsCiphers.excludeWeak(sslParameters.getCipherSuites()));
@@ -125,11 +125,11 @@ public class Httpd {
 
 		bootstrap.setStreamListener(new TraceHttp1StreamListener())
 				 .setExceptionListener(new TraceExceptionListener());
-		HttpServer server = bootstrap.create();
+		final HttpServer server = bootstrap.create();
 		return server;
 	}
 
-	protected void register(ServiceConfig serviceConfig, ServerBootstrap bootstrap, HttpRequestHandler handler) {
+	protected void register(final ServiceConfig serviceConfig, final ServerBootstrap bootstrap, final HttpRequestHandler handler) {
 		try {
 			LOG.debug("hostname="+serviceConfig.getHostname());
 			if (StringUtils.isNotEmpty(serviceConfig.getHostname())) {
@@ -143,19 +143,19 @@ public class Httpd {
 		}
 	}
 	
-	protected void registerFileServer(ServiceConfig serviceConfig, ServerBootstrap bootstrap) {
+	protected void registerFileServer(final ServiceConfig serviceConfig, final ServerBootstrap bootstrap) {
 		LOG.info("VirtualHost="+getVirtualHost(serviceConfig)+", path="+serviceConfig.getPath() +"* FileServer");
 		register(serviceConfig, bootstrap, new FileServerRequestHandler(serviceConfig));
 	}
 
-	protected void registerThymeleafServer(ServiceConfig serviceConfig, ServerBootstrap bootstrap) {
+	protected void registerThymeleafServer(final ServiceConfig serviceConfig, final ServerBootstrap bootstrap) {
 		LOG.info("VirtualHost="+getVirtualHost(serviceConfig)+", path="+serviceConfig.getPath() + "* ThymeleafServer");
 		register(serviceConfig, bootstrap, new ThymeleafServerRequestHandler(serviceConfig));
 	}
 
-	protected void registerReverseProxy(ServiceConfig serviceConfig, ServerBootstrap bootstrap) {
+	protected void registerReverseProxy(final ServiceConfig serviceConfig, final ServerBootstrap bootstrap) {
 		try {
-			HttpHost targetHost = HttpHost.create(serviceConfig.getReverse().getTarget().toURI());
+			final HttpHost targetHost = HttpHost.create(serviceConfig.getReverse().getTarget().toURI());
 			LOG.info("VirtualHost="+getVirtualHost(serviceConfig)+", path="+serviceConfig.getPath()+"* ReverseProxy to "+targetHost);
 			register(serviceConfig, bootstrap, new ReverseProxyHandler(targetHost, serviceConfig));
 		} catch (Exception e) {
@@ -163,12 +163,12 @@ public class Httpd {
 		}
 	}
 
-	protected void registerJettyEmbedded(ServiceConfig serviceConfig, ServerBootstrap bootstrap) {
+	protected void registerJettyEmbedded(ServiceConfig serviceConfig, final ServerBootstrap bootstrap) {
 		try {
-			JettyDeployment jettyDeploy = new JettyDeployment();
+			final JettyDeployment jettyDeploy = new JettyDeployment();
 			jettyDeploy.deploy(serviceConfig);
 
-			HttpHost targetHost = HttpHost.create(serviceConfig.getReverse().getTarget().toURI());
+			final HttpHost targetHost = HttpHost.create(serviceConfig.getReverse().getTarget().toURI());
 			LOG.info("VirtualHost="+getVirtualHost(serviceConfig)+", path="+serviceConfig.getPath() + "* ReverseProxy+JettyEmbedded to " + targetHost);
 			register(serviceConfig, bootstrap, new ReverseProxyHandler(targetHost, serviceConfig));
 		} catch (Exception e) {
@@ -176,7 +176,7 @@ public class Httpd {
 		}
 	}
 	
-	protected String getVirtualHost(ServiceConfig serviceConfig) {
+	protected String getVirtualHost(final ServiceConfig serviceConfig) {
 		return StringUtils.isNotEmpty(serviceConfig.getHostname()) ? serviceConfig.getHostname() : "default";
 	}
 }

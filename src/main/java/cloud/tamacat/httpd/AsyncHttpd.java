@@ -15,11 +15,8 @@ import javax.net.ssl.SSLParameters;
 
 import org.apache.hc.core5.function.Supplier;
 import org.apache.hc.core5.http.HttpHost;
-import org.apache.hc.core5.http.config.Http1Config;
 import org.apache.hc.core5.http.impl.HttpProcessors;
-import org.apache.hc.core5.http.impl.bootstrap.AsyncRequesterBootstrap;
 import org.apache.hc.core5.http.impl.bootstrap.AsyncServerBootstrap;
-import org.apache.hc.core5.http.impl.bootstrap.HttpAsyncRequester;
 import org.apache.hc.core5.http.impl.bootstrap.HttpAsyncServer;
 import org.apache.hc.core5.http.nio.AsyncServerExchangeHandler;
 import org.apache.hc.core5.http.nio.ssl.BasicServerTlsStrategy;
@@ -37,7 +34,6 @@ import cloud.tamacat.httpd.config.ServerConfig;
 import cloud.tamacat.httpd.config.ServiceConfig;
 import cloud.tamacat.httpd.jetty.JettyDeployment;
 import cloud.tamacat.httpd.jetty.JettyManager;
-import cloud.tamacat.httpd.listener.TraceConnPoolListener;
 import cloud.tamacat.httpd.listener.TraceHttp1StreamListener;
 import cloud.tamacat.httpd.tls.SSLSNIContextCreator;
 import cloud.tamacat.httpd.web.async.FileServerRequestHandler;
@@ -53,21 +49,16 @@ public class AsyncHttpd {
 
 	static final Log LOG = LogFactory.getLog(AsyncHttpd.class);
 
-	public static void main(String[] args) throws Exception {
-		AsyncHttpd server = new AsyncHttpd();
+	public static void main(final String[] args) throws Exception {
+		final AsyncHttpd server = new AsyncHttpd();
 		server.startup(args);
 	}
 		
-	public void startup(String... args) throws Exception {
-		String json = args.length>=1 ? args[0] : "service.json";
-		ServerConfig config = ServerConfig.load(json);
+	public void startup(final String... args) throws Exception {
+		final String json = args.length>=1 ? args[0] : "service.json";
+		final ServerConfig config = ServerConfig.load(json);
 
-		IOReactorConfig reactor = IOReactorConfig.custom()
-			.setSoTimeout(config.getSoTimeout(), TimeUnit.SECONDS).build();
-		
-		HttpAsyncRequester requester = createHttpAsyncRequester(config, reactor);
-
-		HttpAsyncServer server = createHttpAsyncServer(config, reactor, requester);
+		final HttpAsyncServer server = createHttpAsyncServer(config);
 		int port = config.getPort();
 
 		JettyManager.getInstance().start();
@@ -79,11 +70,9 @@ public class AsyncHttpd {
 				JettyManager.getInstance().stop();
 				
 				server.close(CloseMode.GRACEFUL);
-				requester.close(CloseMode.GRACEFUL);
 			}
 		});
 
-		requester.start();
 		server.start();
 		
 		server.listen(new InetSocketAddress(port), config.getURIScheme());
@@ -92,23 +81,13 @@ public class AsyncHttpd {
 		server.awaitShutdown(TimeValue.MAX_VALUE);
 	}
 	
-	protected HttpAsyncRequester createHttpAsyncRequester(ServerConfig config, IOReactorConfig reactor) {
-		Http1Config http1config = Http1Config.custom().build();
-		
-		AsyncRequesterBootstrap bootstrap = AsyncRequesterBootstrap.bootstrap()
-			.setHttp1Config(http1config)
-			.setIOReactorConfig(reactor)
-			.setConnPoolListener(new TraceConnPoolListener())
-			.setStreamListener(new TraceHttp1StreamListener())
-			.setMaxTotal(config.getMaxTotal())
-			.setDefaultMaxPerRoute(config.getMaxParRoute());
-		return bootstrap.create();
-	}
-	
-	protected HttpAsyncServer createHttpAsyncServer(ServerConfig config, IOReactorConfig reactor, HttpAsyncRequester requester) {
-		Collection<ServiceConfig> configs = config.getServices();
+	protected HttpAsyncServer createHttpAsyncServer(final ServerConfig config) {
+		final Collection<ServiceConfig> configs = config.getServices();
 
-		AsyncServerBootstrap bootstrap = AsyncServerBootstrap.bootstrap()
+		final IOReactorConfig reactor = IOReactorConfig.custom()
+				.setSoTimeout(config.getSoTimeout(), TimeUnit.SECONDS).build();
+			
+		final AsyncServerBootstrap bootstrap = AsyncServerBootstrap.bootstrap()
 			.setHttpProcessor(HttpProcessors.customServer(config.getServerName()).build())
 			.setIOReactorConfig(reactor)
 			.setStreamListener(new TraceHttp1StreamListener("client<-httpd"));
@@ -117,12 +96,12 @@ public class AsyncHttpd {
 		
 		//HTTPS
 		if (config.useHttps()) {
-			HttpsConfig https = config.getHttpsConfig();
-			SSLContext sslContext = new SSLSNIContextCreator(config).getSSLContext();
+			final HttpsConfig https = config.getHttpsConfig();
+			final SSLContext sslContext = new SSLSNIContextCreator(config).getSSLContext();
 			final SSLSessionInitializer initializer = new SSLSessionInitializer() {	
 				@Override
-				public void initialize(NamedEndpoint endpoint, SSLEngine sslEngine) {
-		            SSLParameters sslParameters = sslEngine.getSSLParameters();
+				public void initialize(final NamedEndpoint endpoint, final SSLEngine sslEngine) {
+					final SSLParameters sslParameters = sslEngine.getSSLParameters();
 		            sslParameters.setProtocols(TLS.excludeWeak(sslParameters.getProtocols()));
 		            sslParameters.setCipherSuites(TlsCiphers.excludeWeak(sslParameters.getCipherSuites()));
 		            sslEngine.setSSLParameters(sslParameters);
@@ -136,13 +115,13 @@ public class AsyncHttpd {
 			serviceConfig.setServerConfig(config);
 			
 			if (serviceConfig.isReverseProxy()) {
-				registerReverseProxy(serviceConfig, bootstrap, requester);
+				registerReverseProxy(serviceConfig, bootstrap);
 			} else if ("jetty".equals(serviceConfig.getType())) {
-				registerJettyEmbedded(serviceConfig, bootstrap, requester);
+				registerJettyEmbedded(serviceConfig, bootstrap);
 			} else if ("thymeleaf".equals(serviceConfig.getType())) {
-				registerThymeleafServer(serviceConfig, bootstrap, requester);
+				registerThymeleafServer(serviceConfig, bootstrap);
 			} else {
-				registerFileServer(serviceConfig, bootstrap, requester);
+				registerFileServer(serviceConfig, bootstrap);
 			}
 			
 			//add filter
@@ -151,11 +130,11 @@ public class AsyncHttpd {
 			});
 		}
 				
-		HttpAsyncServer server = bootstrap.create();
+		final HttpAsyncServer server = bootstrap.create();
 		return server;
 	}
 	
-	protected void registerFileServer(ServiceConfig serviceConfig, AsyncServerBootstrap bootstrap, HttpAsyncRequester requester) {
+	protected void registerFileServer(final ServiceConfig serviceConfig, final AsyncServerBootstrap bootstrap) {
 		try {
 			bootstrap.register(serviceConfig.getPath() + "*", new FileServerRequestHandler(serviceConfig));
 		} catch (Exception e) {
@@ -164,7 +143,7 @@ public class AsyncHttpd {
 		}
 	}
 
-	protected void registerThymeleafServer(ServiceConfig serviceConfig, AsyncServerBootstrap bootstrap, HttpAsyncRequester requester) {
+	protected void registerThymeleafServer(final ServiceConfig serviceConfig, final AsyncServerBootstrap bootstrap) {
 		try {
 			bootstrap.register(serviceConfig.getPath() + "*", new ThymeleafServerRequestHandler(serviceConfig));
 		} catch (Exception e) {
@@ -173,15 +152,15 @@ public class AsyncHttpd {
 		}
 	}
 	
-	protected void registerReverseProxy(ServiceConfig serviceConfig, AsyncServerBootstrap bootstrap, HttpAsyncRequester requester) {
+	protected void registerReverseProxy(final ServiceConfig serviceConfig, final AsyncServerBootstrap bootstrap) {
 		try {
-			HttpHost targetHost = HttpHost.create(serviceConfig.getReverse().getTarget().toURI());
+			final HttpHost targetHost = HttpHost.create(serviceConfig.getReverse().getTarget().toURI());
 			LOG.info(serviceConfig.getPath() + "* ReverseProxy to " + targetHost);
 			bootstrap.register(serviceConfig.getPath() + "*", new Supplier<AsyncServerExchangeHandler>() {
 
 				@Override
 				public AsyncServerExchangeHandler get() {
-					return new IncomingExchangeHandler(targetHost, requester, serviceConfig);
+					return new IncomingExchangeHandler(targetHost, serviceConfig);
 				}
 
 			});
@@ -190,18 +169,18 @@ public class AsyncHttpd {
 		}
 	}
 	
-	protected void registerJettyEmbedded(ServiceConfig serviceConfig, AsyncServerBootstrap bootstrap, HttpAsyncRequester requester) {
+	protected void registerJettyEmbedded(final ServiceConfig serviceConfig, final AsyncServerBootstrap bootstrap) {
 		try {
-			JettyDeployment jettyDeploy = new JettyDeployment();
+			final JettyDeployment jettyDeploy = new JettyDeployment();
 			jettyDeploy.deploy(serviceConfig);
 			
-			HttpHost targetHost = HttpHost.create(serviceConfig.getReverse().getTarget().toURI());
+			final HttpHost targetHost = HttpHost.create(serviceConfig.getReverse().getTarget().toURI());
 			LOG.info(serviceConfig.getPath() + "* ReverseProxy+JettyEmbedded to " + targetHost);
 			bootstrap.register(serviceConfig.getPath() + "*", new Supplier<AsyncServerExchangeHandler>() {
 
 				@Override
 				public AsyncServerExchangeHandler get() {
-					return new IncomingExchangeHandler(targetHost, requester, serviceConfig);
+					return new IncomingExchangeHandler(targetHost, serviceConfig);
 				}
 
 			});

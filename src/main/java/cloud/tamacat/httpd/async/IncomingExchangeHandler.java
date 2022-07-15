@@ -32,6 +32,7 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.hc.core5.concurrent.FutureCallback;
 import org.apache.hc.core5.http.ConnectionClosedException;
@@ -45,7 +46,9 @@ import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.HttpRequest;
 import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.HttpStatus;
+import org.apache.hc.core5.http.config.Http1Config;
 import org.apache.hc.core5.http.impl.BasicEntityDetails;
+import org.apache.hc.core5.http.impl.bootstrap.AsyncRequesterBootstrap;
 import org.apache.hc.core5.http.impl.bootstrap.HttpAsyncRequester;
 import org.apache.hc.core5.http.message.BasicHttpResponse;
 import org.apache.hc.core5.http.nio.AsyncClientEndpoint;
@@ -55,9 +58,12 @@ import org.apache.hc.core5.http.nio.DataStreamChannel;
 import org.apache.hc.core5.http.nio.ResponseChannel;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.apache.hc.core5.http.protocol.HttpCoreContext;
+import org.apache.hc.core5.reactor.IOReactorConfig;
 import org.apache.hc.core5.util.Timeout;
 
 import cloud.tamacat.httpd.config.ServiceConfig;
+import cloud.tamacat.httpd.listener.TraceConnPoolListener;
+import cloud.tamacat.httpd.listener.TraceHttp1StreamListener;
 import cloud.tamacat.log.Log;
 import cloud.tamacat.log.LogFactory;
 
@@ -73,22 +79,38 @@ public class IncomingExchangeHandler implements AsyncServerExchangeHandler {
 	static final int INIT_BUFFER_SIZE = 4096;
 	static final int PROXY_BUFFER_SIZE = 1024;
 	
-	Timeout timeout = Timeout.ofSeconds(30);
+	protected final Timeout timeout = Timeout.ofSeconds(30);
 	
-	private final HttpHost targetHost;
-	private final HttpAsyncRequester requester;
-	private final ProxyExchangeState exchangeState;
-
-	public IncomingExchangeHandler(final HttpHost targetHost, final HttpAsyncRequester requester, final ServiceConfig serviceConfig) {
+	protected final HttpHost targetHost;
+	protected final ServiceConfig serviceConfig;
+	protected final ProxyExchangeState exchangeState;
+	protected final AsyncRequesterBootstrap requesterBootstrap;
+	
+	public IncomingExchangeHandler(final HttpHost targetHost, final ServiceConfig serviceConfig) {
 		this.targetHost = targetHost;
-		this.requester = requester;
-		this.exchangeState = new ProxyExchangeState(serviceConfig);
+		this.serviceConfig = serviceConfig;
+		this.exchangeState = new ProxyExchangeState(serviceConfig);		
+		this.requesterBootstrap = createHttpAsyncRequester();
+	}
+	
+	protected AsyncRequesterBootstrap createHttpAsyncRequester() {
+		final Http1Config http1config = Http1Config.custom().build();
+		final IOReactorConfig reactor = IOReactorConfig.custom()
+				.setSoTimeout(serviceConfig.getServerConfig().getSoTimeout(), TimeUnit.SECONDS).build();
+		final AsyncRequesterBootstrap bootstrap = AsyncRequesterBootstrap.bootstrap()
+			.setHttp1Config(http1config)
+			.setIOReactorConfig(reactor)
+			.setConnPoolListener(new TraceConnPoolListener())
+			.setStreamListener(new TraceHttp1StreamListener())
+			.setMaxTotal(serviceConfig.getServerConfig().getMaxTotal())
+			.setDefaultMaxPerRoute(serviceConfig.getServerConfig().getMaxParRoute());
+		return bootstrap;
 	}
 
 	@Override
 	public void handleRequest(final HttpRequest incomingRequest, final EntityDetails entityDetails,
 			final ResponseChannel responseChannel, final HttpContext httpContext) throws HttpException, IOException {
-
+		
 		synchronized (exchangeState) {
 			if (LOG.isTraceEnabled()) {
 				LOG.trace("[client->proxy] "+exchangeState.id+" "+incomingRequest.getMethod()+" "+incomingRequest.getRequestUri());
@@ -110,6 +132,9 @@ public class IncomingExchangeHandler implements AsyncServerExchangeHandler {
 			LOG.trace("[proxy->origin] " + exchangeState.id + " request connection to " + targetHost);
 		}
 
+		final HttpAsyncRequester requester = requesterBootstrap.create();
+		requester.start();
+		
 		requester.connect(targetHost, timeout, null, new FutureCallback<AsyncClientEndpoint>() {
 
 			@Override
