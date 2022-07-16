@@ -1,6 +1,7 @@
 {
   "port": 80,
   "host": "localhost",
+  "serverType": "classic",
   "maxTotal": 100,
   "maxPerRoute": 20,
   "soTimeout": 60,

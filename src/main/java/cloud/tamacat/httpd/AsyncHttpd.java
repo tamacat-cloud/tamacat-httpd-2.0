@@ -50,16 +50,18 @@ public class AsyncHttpd {
 	static final Log LOG = LogFactory.getLog(AsyncHttpd.class);
 
 	public static void main(final String[] args) throws Exception {
-		final AsyncHttpd server = new AsyncHttpd();
-		server.startup(args);
+		AsyncHttpd.startup(args);
 	}
 		
-	public void startup(final String... args) throws Exception {
+	public static void startup(final String... args) throws Exception {
 		final String json = args.length>=1 ? args[0] : "service.json";
 		final ServerConfig config = ServerConfig.load(json);
-
+		new AsyncHttpd().startup(config);
+	}
+	
+	public void startup(final ServerConfig config) throws Exception {
 		final HttpAsyncServer server = createHttpAsyncServer(config);
-		int port = config.getPort();
+		final int port = config.getPort();
 
 		JettyManager.getInstance().start();
 
@@ -136,6 +138,7 @@ public class AsyncHttpd {
 	
 	protected void registerFileServer(final ServiceConfig serviceConfig, final AsyncServerBootstrap bootstrap) {
 		try {
+			LOG.info("register: " + serviceConfig.getPath() + "* FileServer");
 			bootstrap.register(serviceConfig.getPath() + "*", new FileServerRequestHandler(serviceConfig));
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -145,6 +148,7 @@ public class AsyncHttpd {
 
 	protected void registerThymeleafServer(final ServiceConfig serviceConfig, final AsyncServerBootstrap bootstrap) {
 		try {
+			LOG.info("register: " + serviceConfig.getPath() + "* ThymeleafServer");
 			bootstrap.register(serviceConfig.getPath() + "*", new ThymeleafServerRequestHandler(serviceConfig));
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -155,7 +159,7 @@ public class AsyncHttpd {
 	protected void registerReverseProxy(final ServiceConfig serviceConfig, final AsyncServerBootstrap bootstrap) {
 		try {
 			final HttpHost targetHost = HttpHost.create(serviceConfig.getReverse().getTarget().toURI());
-			LOG.info(serviceConfig.getPath() + "* ReverseProxy to " + targetHost);
+			LOG.info("register: " + serviceConfig.getPath() + "* ReverseProxy to " + targetHost);
 			bootstrap.register(serviceConfig.getPath() + "*", new Supplier<AsyncServerExchangeHandler>() {
 
 				@Override
@@ -175,7 +179,7 @@ public class AsyncHttpd {
 			jettyDeploy.deploy(serviceConfig);
 			
 			final HttpHost targetHost = HttpHost.create(serviceConfig.getReverse().getTarget().toURI());
-			LOG.info(serviceConfig.getPath() + "* ReverseProxy+JettyEmbedded to " + targetHost);
+			LOG.info("register: " + serviceConfig.getPath() + "* ReverseProxy+JettyEmbedded to " + targetHost);
 			bootstrap.register(serviceConfig.getPath() + "*", new Supplier<AsyncServerExchangeHandler>() {
 
 				@Override

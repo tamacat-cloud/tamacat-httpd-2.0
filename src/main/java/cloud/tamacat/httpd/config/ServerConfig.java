@@ -20,6 +20,10 @@ import cloud.tamacat.util.StringUtils;
 public class ServerConfig implements Serializable {
 	private final static long serialVersionUID = -7256101660692911262L;
 
+	@SerializedName("serverType")
+	@Expose
+	String serverType = "classic"; //classic or async
+	
 	@SerializedName("serverName")
 	@Expose
 	String serverName = "Httpd";
@@ -61,6 +65,10 @@ public class ServerConfig implements Serializable {
 	@SerializedName("https")
 	@Expose
 	HttpsConfig httpsConfig;
+	
+	public String getServerType() {
+		return serverType;
+	}
 	
 	public String getServerName() {
 		return serverName;

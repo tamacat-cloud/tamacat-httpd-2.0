@@ -8,8 +8,7 @@ package cloud.tamacat.httpd;
 public class Httpsd_test {
 
 	public static void main(String[] args) throws Exception {
-		Httpd server = new Httpd();
-		server.startup("service-https.json");
+		Httpd.startup("service-https.json");
 	}
 
 }

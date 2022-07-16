@@ -2,6 +2,7 @@
   "protocol": "https",
   "port": 443,
   "host": "localhost",
+  "serverType": "async",
   "maxTotal": 100,
   "maxPerRoute": 20,
   "SoTimeout": 60,
