@@ -1,6 +1,7 @@
 
-
 # Docker image
+
+* tamacat-httpd-2.0 (without Jetty)
 ```
 FROM tamacat/tamacat-httpd:2.0-latest
 ```
@@ -9,6 +10,7 @@ FROM tamacat/tamacat-httpd:2.0-latest
 ```
 docker run --rm -it -d -p 80:80 tamacat/tamacat-httpd:2.0-latest 
 ```
+
 * There is no contents in the initial state. (404 Not Found)
 
 ### Configure service.json
@@ -20,17 +22,12 @@ docker run --rm -it -d -p 80:80 tamacat/tamacat-httpd:2.0-latest
 ### Container bind port
   * emvironment:
     - BIND_PORT=80
-   
-### webapps
-  * Add Servlet/JSP Web Application in /usr/local/tamacat-httpd/webapps/
-  * Common Libraries in /usr/local/tamacat-httpd/lib/
 
 ### Dockerfile
 ```
 FROM tamacat/tamacat-httpd:2.0-latest
 
 COPY ./conf /usr/local/tamacat-httpd/conf
-COPY ./webapps /usr/local/tamacat-httpd/webapps
 ```
 
 # docker-compose
@@ -39,5 +36,4 @@ docker-compose up -d --build
 ```
 
 ## Examples Web Application
-* http://localhost/examples/
-* http://localhost/examples/request.jsp
+* http://localhost/

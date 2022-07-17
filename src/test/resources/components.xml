@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<beans>
-  <bean id="filter-1" class="cloud.tamacat.httpd.filter.ResponseFilter">
-    <property name="appendResponseHeader">
-      <value>Strict-Transport-Security: max-age=63072000; includeSubDomains; preload</value>
-    </property>
-  </bean>
-</beans>

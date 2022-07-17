@@ -32,7 +32,6 @@ COPY --from=BUILD /build/tamacat-httpd-2.0/target/tamacat-httpd-2.0-SNAPSHOT-jar
 
 COPY ./conf /usr/local/tamacat-httpd/conf
 COPY ./htdocs /usr/local/tamacat-httpd/htdocs
-COPY ./webapps /usr/local/tamacat-httpd/webapps
 
 ENV CLASSPATH=/usr/local/tamacat-httpd/conf:/usr/local/tamacat-httpd/lib/tamacat-httpd-2.0-SNAPSHOT-jar-with-dependencies.jar
 
