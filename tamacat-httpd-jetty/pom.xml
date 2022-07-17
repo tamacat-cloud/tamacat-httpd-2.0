@@ -154,13 +154,13 @@
         <artifactId>maven-assembly-plugin</artifactId>
         <version>3.3.0</version>
         <configuration>
-          <finalName>tamacat-httpd-${project.version}</finalName>
+          <finalName>tamacat-httpd-jetty-${project.version}</finalName>
           <descriptorRefs>
             <descriptorRef>jar-with-dependencies</descriptorRef>
           </descriptorRefs>
           <archive>
             <manifest>
-              <mainClass>cloud.tamacat.httpd.Httpd</mainClass>
+              <mainClass>cloud.tamacat.httpd.jetty.HttpdWithzjetty</mainClass>
             </manifest>
           </archive>
         </configuration>
