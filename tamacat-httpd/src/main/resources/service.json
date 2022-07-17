@@ -1,0 +1,18 @@
+{
+  "protocol": "http",
+  "port": 80,
+  "host": "localhost",
+  "serverType": "classic",
+  "maxTotal": 1000,
+  "maxPerRoute": 200,
+  "soTimeout": 60,
+  "keepAlive": true,
+  "services": [
+    {
+      "path": "/",
+      "type": "thymeleaf",
+      "id": "default",
+      "docsRoot": "${server.home}/htdocs/root"
+    }
+  ]
+}

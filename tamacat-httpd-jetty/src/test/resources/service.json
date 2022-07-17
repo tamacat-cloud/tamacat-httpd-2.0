@@ -1,0 +1,42 @@
+{
+  "port": 80,
+  "host": "localhost",
+  "serverType": "classic",
+  "maxTotal": 100,
+  "maxPerRoute": 20,
+  "soTimeout": 60,
+  "keepAlive": true,
+  "services": [
+    {
+      "path": "/",
+      "type": "normal",
+      "id": "default",
+      "docsRoot": "src/test/resources/htdocs"
+    },
+    {
+      "path": "/test/",
+      "type": "reverse",
+      "id": "test",
+      "reverse": {
+        "url": "http://localhost:8080/test/"
+      }
+    },
+    {
+      "path": "/examples/",
+      "type": "reverse",
+      "id": "examples",
+      "reverse": {
+        "url": "http://localhost:8080/examples/"
+      }
+    },
+    {
+      "host": "localhost",
+      "path": "/docs/",
+      "type": "reverse",
+      "id": "docs",
+      "reverse": {
+        "url": "http://localhost:8080/docs/"
+      }
+    }
+  ]
+}

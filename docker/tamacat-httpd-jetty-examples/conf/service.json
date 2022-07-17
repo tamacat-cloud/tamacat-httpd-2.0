@@ -1,0 +1,27 @@
+{
+  "protocol": "http",
+  "port": 80,
+  "host": "localhost",
+  "maxTotal": 1000,
+  "maxPerRoute": 200,
+  "soTimeout": 60,
+  "keepAlive": true,
+  "services": [
+    {
+      "host": "localhost",
+      "path": "/",
+      "type": "thymeleaf",
+      "id": "default",
+      "docsRoot": "${server.home}/htdocs/root"
+    },
+    {
+      "host": "localhost",
+      "path": "/examples/",
+      "type": "jetty",
+      "id": "examples",
+      "reverse": {
+        "url": "http://127.0.0.1:8080/examples/"
+      }
+    }
+  ]
+}

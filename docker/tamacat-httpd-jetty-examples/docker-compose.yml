@@ -1,0 +1,12 @@
+version: "3.8"
+
+services:
+  tamacat-httpd-jetty-examples:
+    build: ./
+    ports:
+      - "80:80"
+    #[optional]
+    #environment:
+    # - SERVER_HOME=/usr/local/tamacat-httpd
+    # - SERVICE_JSON=service.json
+    # - BIND_PORT=80
