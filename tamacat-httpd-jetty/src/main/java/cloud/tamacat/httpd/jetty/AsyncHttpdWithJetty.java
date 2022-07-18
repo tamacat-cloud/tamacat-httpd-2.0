@@ -16,9 +16,9 @@ import org.apache.hc.core5.io.CloseMode;
 import org.apache.hc.core5.util.TimeValue;
 
 import cloud.tamacat.httpd.AsyncHttpd;
-import cloud.tamacat.httpd.async.IncomingExchangeHandler;
 import cloud.tamacat.httpd.config.ServerConfig;
 import cloud.tamacat.httpd.config.ServiceConfig;
+import cloud.tamacat.httpd.reverse.async.IncomingExchangeHandler;
 import cloud.tamacat.log.Log;
 import cloud.tamacat.log.LogFactory;
 

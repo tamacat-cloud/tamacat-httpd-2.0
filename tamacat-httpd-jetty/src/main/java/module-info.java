@@ -6,20 +6,13 @@
 module cloud.tamacat.httpd.jetty {
 	
 	exports cloud.tamacat.httpd.jetty;
-	
-	requires transitive org.apache.httpcomponents.core5.httpcore5;
-	requires transitive org.apache.httpcomponents.core5.httpcore5.h2;
-	requires transitive thymeleaf;
-
-	requires transitive cloud.tamacat.core;
-	requires transitive cloud.tamacat.httpd;
-	requires transitive com.google.gson;
-	requires transitive org.slf4j;
+	opens cloud.tamacat.httpd.jetty;
 	
 	requires org.eclipse.jetty.server;
 	requires org.eclipse.jetty.servlet;
-	requires org.eclipse.jetty.webapp;
 	requires org.eclipse.jetty.apache.jsp;
-	requires org.mortbay.apache.jasper;
-	
+
+	requires transitive cloud.tamacat.httpd;
+	requires transitive org.eclipse.jetty.webapp;
+	requires transitive org.mortbay.apache.jasper;
 }

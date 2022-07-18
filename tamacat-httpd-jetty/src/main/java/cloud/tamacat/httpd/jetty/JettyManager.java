@@ -32,7 +32,6 @@ public class JettyManager implements Middleware {
 	 * @param port
 	 * @return Server instance
 	 */
-	@SuppressWarnings("exports")
 	public synchronized Server getServer(int port) {
 		return getServer(null, port);
 	}
@@ -42,7 +41,6 @@ public class JettyManager implements Middleware {
 	 * @param port
 	 * @return Server instance
 	 */
-	@SuppressWarnings("exports")
 	public synchronized Server getServer(String host, int port) {
 		Server instance = MANAGER.get(port);
 		if (instance == null) {

@@ -35,7 +35,7 @@ public class EmbeddedJspStarter extends AbstractLifeCycle {
 	private JettyJasperInitializer sci;
 	private ServletContextHandler context;
 
-	public EmbeddedJspStarter(@SuppressWarnings("exports") ServletContextHandler context) {
+	public EmbeddedJspStarter(ServletContextHandler context) {
 		this.sci = new JettyJasperInitializer();
 		this.context = context;
 		StandardJarScanner jarScanner = new StandardJarScanner();

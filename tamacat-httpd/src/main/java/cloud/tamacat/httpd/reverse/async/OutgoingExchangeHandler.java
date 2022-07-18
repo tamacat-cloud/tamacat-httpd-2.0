@@ -24,7 +24,7 @@
  * <http://www.apache.org/>.
  *
  */
-package cloud.tamacat.httpd.async;
+package cloud.tamacat.httpd.reverse.async;
 
 import java.io.IOException;
 import java.net.SocketTimeoutException;

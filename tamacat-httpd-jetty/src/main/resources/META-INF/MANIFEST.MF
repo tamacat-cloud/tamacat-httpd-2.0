@@ -1,6 +1,6 @@
-Automatic-Module-Name: cloud.tamacat.httpd
+Automatic-Module-Name: cloud.tamacat.httpd.jetty
 Implementation-Title: tamacat-httpd-jetty
-Implementation-Version: 2.0-20220717
+Implementation-Version: 2.0-20220718
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: cloud.tamacat.httpd.jetty
 Bundle-Name: tamacat-httpd-jetty

@@ -14,19 +14,23 @@ module cloud.tamacat.httpd {
 	exports cloud.tamacat.httpd.config;
 	exports cloud.tamacat.httpd.tls;
 	
-	exports cloud.tamacat.httpd.async;
+	exports cloud.tamacat.httpd.reverse.async;
 	exports cloud.tamacat.httpd.web.async;
 	exports cloud.tamacat.httpd.util;
 	 
 	opens cloud.tamacat.httpd;
-	opens cloud.tamacat.httpd.core;
 	opens cloud.tamacat.httpd.config;
-	opens cloud.tamacat.httpd.reverse;
-	opens cloud.tamacat.httpd.reverse.html;
+	opens cloud.tamacat.httpd.core;
+	opens cloud.tamacat.httpd.error;
 	opens cloud.tamacat.httpd.filter;
 	opens cloud.tamacat.httpd.listener;
-	opens cloud.tamacat.httpd.web.async;
+	opens cloud.tamacat.httpd.reverse;
+	opens cloud.tamacat.httpd.reverse.async;
+	opens cloud.tamacat.httpd.reverse.html;
 	opens cloud.tamacat.httpd.tls;
+	opens cloud.tamacat.httpd.util;
+	opens cloud.tamacat.httpd.web;
+	opens cloud.tamacat.httpd.web.async;
 	
 	requires transitive org.apache.httpcomponents.core5.httpcore5;
 	requires transitive org.apache.httpcomponents.core5.httpcore5.h2;
