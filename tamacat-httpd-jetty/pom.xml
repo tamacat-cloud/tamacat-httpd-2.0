@@ -191,6 +191,7 @@
               <arg>service.json</arg>
             </args>
             <extraClasspath>/usr/local/tamacat-httpd/conf</extraClasspath>
+            <workingDirectory>/usr/local/tamacat-httpd</workingDirectory>
             <ports>
               <port>80</port>
             </ports>
