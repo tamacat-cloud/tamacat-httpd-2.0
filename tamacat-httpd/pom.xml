@@ -180,6 +180,7 @@
           <to>
             <image>tamacat/tamacat-httpd</image>
             <tags>
+              <tag>2.0-b20220719</tag>
               <tag>2.0-latest</tag>
             </tags>
           </to>
@@ -194,6 +195,7 @@
             </args>
             <extraClasspath>/usr/local/tamacat-httpd/conf</extraClasspath>
             <workingDirectory>/usr/local/tamacat-httpd</workingDirectory>
+            <creationTime>USE_CURRENT_TIMESTAMP</creationTime>
             <ports>
               <port>80</port>
             </ports>

@@ -38,8 +38,11 @@ import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.EndpointDetails;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.HttpEntityContainer;
 import org.apache.hc.core5.http.HttpException;
 import org.apache.hc.core5.http.HttpRequest;
+import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.HttpStatus;
 import org.apache.hc.core5.http.io.HttpRequestHandler;
 import org.apache.hc.core5.http.io.entity.FileEntity;
@@ -98,7 +101,7 @@ public class FileServerRequestHandler implements HttpRequestHandler {
 		}
 		errorPage = new ThymeleafErrorPage(props);
 	}
-
+	
 	@Override
 	public void handle(
             final ClassicHttpRequest request,
@@ -121,12 +124,11 @@ public class FileServerRequestHandler implements HttpRequestHandler {
 				throw new NotFoundException("Not found file " + file.getPath());
 			} else if (!file.canRead() || file.isDirectory()) {
 				if (useDirectoryListings()) {					
-					String html = listingPage.getListingsPage(request, response, file);
+					String html = listingPage.getListingsPage(request, file);
 					response.setHeader("Content-Type", DEFAULT_CONTENT_TYPE);
 					response.setCode(BasicHttpStatus.SC_OK.getStatusCode());
 					response.setReasonPhrase(BasicHttpStatus.SC_OK.getReasonPhrase());
 					response.setEntity(new StringEntity(html));
-					response.setCode(HttpStatus.SC_OK);
 					ACCESS.info(request+" 200 [OK]");
 					return;
 				} else {
@@ -146,7 +148,7 @@ public class FileServerRequestHandler implements HttpRequestHandler {
 			}
 			
 			LOG.debug(endpoint + ": serving file " + file.getAbsolutePath());
-			response.setEntity(new FileEntity(file, contentType));
+			setEntity(response, new FileEntity(file, contentType));
 			response.setCode(HttpStatus.SC_OK);
 			ACCESS.info(request+" 200 [OK]");
 		} catch (NotFoundException e) {
@@ -159,20 +161,26 @@ public class FileServerRequestHandler implements HttpRequestHandler {
 		}
 	}
 
-	protected void handleNotFound(HttpRequest request, ClassicHttpResponse response, HttpContext context, NotFoundException e) throws HttpException, IOException {
+	protected void handleNotFound(HttpRequest request, HttpResponse response, HttpContext context, NotFoundException e) throws HttpException, IOException {
 		LOG.debug(e.getMessage());
 		String html = errorPage.getErrorPage(request, new NotFoundException());
-		response.setEntity(new StringEntity(html, ContentType.TEXT_HTML));
+		setEntity(response, new StringEntity(html, ContentType.TEXT_HTML));
 		response.setCode(HttpStatus.SC_NOT_FOUND);
 		ACCESS.info(request+" 404 [NotFound]");
 	}
 	
-	protected void handleForbidden(HttpRequest request, ClassicHttpResponse response, HttpContext context, ForbiddenException e) throws HttpException, IOException {
+	protected void handleForbidden(HttpRequest request, HttpResponse response, HttpContext context, ForbiddenException e) throws HttpException, IOException {
 		LOG.debug(e.getMessage());
 		String html = errorPage.getErrorPage(request, new ForbiddenException());
-		response.setEntity(new StringEntity(html, ContentType.TEXT_HTML));
+		setEntity(response, new StringEntity(html, ContentType.TEXT_HTML));
 		response.setCode(HttpStatus.SC_FORBIDDEN);
 		ACCESS.info(request+" 403 [Forbidden]");
+	}
+	
+	protected void setEntity(HttpResponse response, HttpEntity entity) {
+		if (response instanceof HttpEntityContainer) {
+			((HttpEntityContainer)response).setEntity(entity);
+		}
 	}
 	
 	protected String getDecodeUri(String uri) {

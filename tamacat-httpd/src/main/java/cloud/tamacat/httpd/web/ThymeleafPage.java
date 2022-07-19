@@ -9,7 +9,6 @@ import java.util.Locale;
 import java.util.Properties;
 
 import org.apache.hc.core5.http.HttpRequest;
-import org.apache.hc.core5.http.HttpResponse;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.exceptions.TemplateInputException;
@@ -79,17 +78,16 @@ public class ThymeleafPage {
 		return props;
 	}
 	
-	public String getPage(HttpRequest request, HttpResponse response, String page) {
+	public String getPage(HttpRequest request, String page) {
 	    Context context = new Context();
-		return getPage(request, response, context, page);
+		return getPage(request, context, page);
 	}
 
-	public String getPage(HttpRequest request, HttpResponse response,
-	        Context context, String page) {
-		return getTemplatePage(request, response, context, page);
+	public String getPage(HttpRequest request, Context context, String page) {
+		return getTemplatePage(request, context, page);
 	}
 
-	public String getTemplatePage(HttpRequest request, HttpResponse response, Context context, String page) {
+	public String getTemplatePage(HttpRequest request, Context context, String page) {
 	    if (request != null) {
 	        context.setVariable("url", request.getPath());
 	        context.setVariable("method", request.getMethod().toUpperCase(Locale.ENGLISH));

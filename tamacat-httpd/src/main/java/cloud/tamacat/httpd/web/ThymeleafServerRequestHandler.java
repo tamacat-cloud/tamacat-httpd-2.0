@@ -40,8 +40,11 @@ import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.EndpointDetails;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.HttpEntityContainer;
 import org.apache.hc.core5.http.HttpException;
 import org.apache.hc.core5.http.HttpRequest;
+import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.HttpStatus;
 import org.apache.hc.core5.http.io.HttpRequestHandler;
 import org.apache.hc.core5.http.io.entity.FileEntity;
@@ -111,7 +114,7 @@ public class ThymeleafServerRequestHandler implements HttpRequestHandler {
 		page = new ThymeleafPage(props, this.docsRoot);
 		errorPage = new ThymeleafErrorPage(props);
 	}
-
+	
 	@Override
 	public void handle(
 			ClassicHttpRequest request,
@@ -146,7 +149,7 @@ public class ThymeleafServerRequestHandler implements HttpRequestHandler {
 				String file = path.indexOf(".") >= 0 ? path.split("\\.")[0] : path;
 				String html = page.getPage(request, path);
 				LOG.debug(endpoint + ": path " + file);
-				response.setEntity(new StringEntity(html, ContentType.TEXT_HTML));
+				setEntity(response, new StringEntity(html, ContentType.TEXT_HTML));
 				response.setCode(HttpStatus.SC_OK);
 			} else {
 				File file = new File(docsRoot, getDecodeUri(path));
@@ -163,7 +166,7 @@ public class ThymeleafServerRequestHandler implements HttpRequestHandler {
 					contentType = ContentType.DEFAULT_BINARY;
 				}
 				LOG.debug(endpoint + ": serving file " + file);
-				response.setEntity(new FileEntity(file, contentType));
+				setEntity(response, new FileEntity(file, contentType));
 				response.setCode(HttpStatus.SC_OK);
 			}
 	
@@ -192,20 +195,26 @@ public class ThymeleafServerRequestHandler implements HttpRequestHandler {
 		return false;
 	}
 	
-	protected void handleNotFound(HttpRequest request, ClassicHttpResponse response, HttpContext context, NotFoundException e) throws HttpException, IOException {
+	protected void handleNotFound(HttpRequest request, HttpResponse response, HttpContext context, NotFoundException e) throws HttpException, IOException {
 		LOG.debug(e.getMessage());
 		String html = errorPage.getErrorPage(request, new NotFoundException());
-		response.setEntity(new StringEntity(html, ContentType.TEXT_HTML));
+		setEntity(response, new StringEntity(html, ContentType.TEXT_HTML));
 		response.setCode(HttpStatus.SC_NOT_FOUND);
 		ACCESS.info(request+" 404 [NotFound]");
 	}
 	
-	protected void handleForbidden(HttpRequest request, ClassicHttpResponse response, HttpContext context, ForbiddenException e) throws HttpException, IOException {
+	protected void handleForbidden(HttpRequest request, HttpResponse response, HttpContext context, ForbiddenException e) throws HttpException, IOException {
 		LOG.debug(e.getMessage());
 		String html = errorPage.getErrorPage(request, new ForbiddenException());
-		response.setEntity(new StringEntity(html, ContentType.TEXT_HTML));
+		setEntity(response, new StringEntity(html, ContentType.TEXT_HTML));
 		response.setCode(HttpStatus.SC_FORBIDDEN);
 		ACCESS.info(request+" 403 [Forbidden]");
+	}
+	
+	protected void setEntity(HttpResponse response, HttpEntity entity) {
+		if (response instanceof HttpEntityContainer) {
+			((HttpEntityContainer)response).setEntity(entity);
+		}
 	}
 	
 	protected String getDecodeUri(String uri) {

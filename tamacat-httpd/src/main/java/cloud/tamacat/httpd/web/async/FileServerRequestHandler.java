@@ -46,6 +46,7 @@ import org.apache.hc.core5.http.nio.AsyncRequestConsumer;
 import org.apache.hc.core5.http.nio.AsyncServerRequestHandler;
 import org.apache.hc.core5.http.nio.entity.FileEntityProducer;
 import org.apache.hc.core5.http.nio.entity.NoopEntityConsumer;
+import org.apache.hc.core5.http.nio.entity.StringAsyncEntityProducer;
 import org.apache.hc.core5.http.nio.support.BasicRequestConsumer;
 import org.apache.hc.core5.http.nio.support.BasicResponseProducer;
 import org.apache.hc.core5.http.protocol.HttpContext;
@@ -55,6 +56,7 @@ import cloud.tamacat.httpd.config.ServiceConfig;
 import cloud.tamacat.httpd.error.ForbiddenException;
 import cloud.tamacat.httpd.error.NotFoundException;
 import cloud.tamacat.httpd.error.ThymeleafErrorPage;
+import cloud.tamacat.httpd.web.ThymeleafListingsPage;
 import cloud.tamacat.log.Log;
 import cloud.tamacat.log.LogFactory;
 import cloud.tamacat.util.PropertyUtils;
@@ -70,16 +72,25 @@ public class FileServerRequestHandler implements AsyncServerRequestHandler<Messa
 
 	static final Log ACCESS = LogFactory.getLog("Access");
 	static final Log LOG = LogFactory.getLog(FileServerRequestHandler.class);
-	
+	static final ContentType DEFAULT_CONTENT_TYPE = ContentType.TEXT_HTML.withCharset(StandardCharsets.UTF_8);
+
 	protected ClassLoader loader;
 	protected ThymeleafErrorPage errorPage;
 	protected String welcomeFile = "index.html";
 	protected Properties props;
 
+	protected ServiceConfig serviceConfig;
 	protected File docsRoot;
-
+	protected ThymeleafListingsPage listingPage;
+	protected boolean listings;
+	
 	public FileServerRequestHandler(ServiceConfig serviceConfig) {
 		this(new File(serviceConfig.getDocsRoot()));
+		this.serviceConfig = serviceConfig;
+		listings = serviceConfig.isListings();
+		if (listings) {
+			listingPage = new ThymeleafListingsPage(new Properties());
+		}
 	}
 
 	public FileServerRequestHandler(File docsRoot) {
@@ -114,15 +125,19 @@ public class FileServerRequestHandler implements AsyncServerRequestHandler<Messa
 			if (StringUtils.isEmpty(path) || path.contains("..")) {
 				throw new NotFoundException();
 			}
-			File file = new File(docsRoot, getDecodeUri(path));
+			File file = new File(docsRoot, getDecodeUri(path).replace(serviceConfig.getPath(), ""));
 			if (!file.exists()) {
 				throw new NotFoundException("Not found file " + file.getPath());
 			} else if (!file.canRead() || file.isDirectory()) {
-				if (StringUtils.isNotEmpty(welcomeFile)) {
-					file = new File(file.getPath(), welcomeFile);
-					if (!file.exists()) {
-						throw new NotFoundException("Not found file " + file.getPath());
-					}
+				if (useDirectoryListings()) {					
+					String html = listingPage.getListingsPage(request, file);
+					responseTrigger.submitResponse(
+						new BasicResponseProducer(HttpStatus.SC_OK,
+						new StringAsyncEntityProducer(html, DEFAULT_CONTENT_TYPE)),
+						context
+					);
+					ACCESS.info(request+" 200 [OK]");
+					return;
 				} else {
 					throw new ForbiddenException("Cannot read file " + file.getPath());
 				}
@@ -175,6 +190,35 @@ public class FileServerRequestHandler implements AsyncServerRequestHandler<Messa
 			throw new NotFoundException();
 		}
 		return decoded;
+	}
+	
+	/**
+	 * <p>Should directory listings be produced
+	 * if there is no welcome file in this directory.</p>
+	 *
+	 * <p>The welcome file becomes unestablished when I set true.<br>
+	 * When I set the welcome file, please set it after having
+	 * carried out this method.</p>
+	 *
+	 * @param listings true: directory listings be produced (if welcomeFile is null).
+	 */
+	public void setListings(boolean listings) {
+		this.listings = listings;
+		if (listings) {
+			this.welcomeFile = null;
+		}
+	}
+
+	public void setListingsPage(String listingsPage) {
+		listingPage.setListingsPage(listingsPage);
+	}
+
+	protected boolean useDirectoryListings() {
+		if (listings) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 	
 	/**

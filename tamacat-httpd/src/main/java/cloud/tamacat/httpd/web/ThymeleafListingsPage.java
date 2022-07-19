@@ -18,7 +18,6 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.apache.hc.core5.http.HttpRequest;
-import org.apache.hc.core5.http.HttpResponse;
 import org.thymeleaf.context.Context;
 
 import cloud.tamacat.log.Log;
@@ -74,12 +73,12 @@ public class ThymeleafListingsPage extends ThymeleafPage {
 		}
 	}
 
-	public String getListingsPage(HttpRequest request, HttpResponse response, File file) {
+	public String getListingsPage(HttpRequest request, File file) {
 		Context context = new Context();
-		return getListingsPage(request, response, context, file);
+		return getListingsPage(request, context, file);
 	}
 
-	public String getListingsPage(HttpRequest request, HttpResponse response, Context context, File file) {
+	public String getListingsPage(HttpRequest request, Context context, File file) {
 		try {
 			context.setVariable("path", URLDecoder.decode(request.getPath(), "UTF-8"));
 		} catch (Exception e) {
@@ -123,7 +122,7 @@ public class ThymeleafListingsPage extends ThymeleafPage {
 		context.setVariable("list", list);
 		
 		try {
-		    return getTemplatePage(request, response, context, listingsPage);
+		    return getTemplatePage(request, context, listingsPage);
 		} catch (Exception e) {
 			LOG.trace(e.getMessage());
 			return DEFAULT_ERROR_500_HTML;
