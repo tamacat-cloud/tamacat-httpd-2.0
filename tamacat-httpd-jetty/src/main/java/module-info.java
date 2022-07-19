@@ -8,9 +8,9 @@ module cloud.tamacat.httpd.jetty {
 	exports cloud.tamacat.httpd.jetty;
 	opens cloud.tamacat.httpd.jetty;
 	
-	requires org.eclipse.jetty.server;
-	requires org.eclipse.jetty.servlet;
-	requires org.eclipse.jetty.apache.jsp;
+	requires transitive org.eclipse.jetty.server;
+	requires transitive org.eclipse.jetty.servlet;
+	requires transitive org.eclipse.jetty.apache.jsp;
 
 	requires transitive cloud.tamacat.httpd;
 	requires transitive org.eclipse.jetty.webapp;

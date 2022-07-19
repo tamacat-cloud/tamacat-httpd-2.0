@@ -9,11 +9,11 @@ import cloud.tamacat.httpd.config.ServerConfig;
 
 public class HttpdWithJetty {
 
-	public static void main(final String[] args) throws Exception {
+	public static void main(final String[] args) {
 		startup(args);
 	}
 	
-	public static void startup(final String... args) throws Exception {
+	public static void startup(final String... args) {
 		final String json = args.length >= 1 ? args[0] : "service.json";
 		final ServerConfig config = ServerConfig.load(json);
 		

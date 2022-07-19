@@ -5,6 +5,8 @@
  */
 package cloud.tamacat.httpd.jetty;
 
+import java.io.IOException;
+
 import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.impl.bootstrap.HttpServer;
 import org.apache.hc.core5.http.impl.bootstrap.ServerBootstrap;
@@ -25,18 +27,18 @@ public class ClassicHttpdWithJetty extends ClassicHttpd {
 
 	static final Log LOG = LogFactory.getLog(ClassicHttpdWithJetty.class);
 
-	public static void main(final String[] args) throws Exception {
+	public static void main(final String[] args) {
 		ClassicHttpdWithJetty.startup(args);
 	}
 
-	public static void startup(final String... args) throws Exception {
+	public static void startup(final String... args) {
 		final String json = args.length>=1 ? args[0] : "service.json";
 		final ServerConfig config = ServerConfig.load(json);
 		new ClassicHttpdWithJetty().startup(config);
 	}
 	
 	@Override
-	public void startup(final ServerConfig config) throws Exception {
+	public void startup(final ServerConfig config) {
 		final int port = config.getPort();
 
 		final HttpServer server = createHttpServer(config);
@@ -55,9 +57,14 @@ public class ClassicHttpdWithJetty extends ClassicHttpd {
 			}
 		});
 
-		server.start();
-		LOG.info("Listening on port " + port);
-		server.awaitTermination(TimeValue.MAX_VALUE);
+		try {
+			server.start();
+			LOG.info("Listening on port " + port);
+			server.awaitTermination(TimeValue.MAX_VALUE);
+		} catch (IOException | InterruptedException e) {
+			throw new RuntimeException(e);
+		}
+		
 	}
 
 	@Override

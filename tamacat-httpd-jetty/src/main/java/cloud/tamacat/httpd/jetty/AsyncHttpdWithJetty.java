@@ -30,18 +30,18 @@ public class AsyncHttpdWithJetty extends AsyncHttpd {
 
 	static final Log LOG = LogFactory.getLog(AsyncHttpdWithJetty.class);
 
-	public static void main(final String[] args) throws Exception {
+	public static void main(final String[] args) {
 		AsyncHttpdWithJetty.startup(args);
 	}
 		
-	public static void startup(final String... args) throws Exception {
+	public static void startup(final String... args) {
 		final String json = args.length>=1 ? args[0] : "service.json";
 		final ServerConfig config = ServerConfig.load(json);
 		new AsyncHttpdWithJetty().startup(config);
 	}
 	
 	@Override
-	public void startup(final ServerConfig config) throws Exception {
+	public void startup(final ServerConfig config) {
 		final HttpAsyncServer server = createHttpAsyncServer(config);
 		final int port = config.getPort();
 
@@ -62,7 +62,11 @@ public class AsyncHttpdWithJetty extends AsyncHttpd {
 		server.listen(new InetSocketAddress(port), config.getURIScheme());
 		LOG.info("Listening on port " + port);
 
-		server.awaitShutdown(TimeValue.MAX_VALUE);
+		try {
+			server.awaitShutdown(TimeValue.MAX_VALUE);
+		} catch (InterruptedException e) {
+			throw new RuntimeException(e);
+		}
 	}
 	
 	@Override

@@ -5,6 +5,7 @@
  */
 package cloud.tamacat.httpd;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
@@ -41,17 +42,17 @@ public class ClassicHttpd {
 
 	static final Log LOG = LogFactory.getLog(ClassicHttpd.class);
 
-	public static void main(final String[] args) throws Exception {
+	public static void main(final String[] args) {
 		ClassicHttpd.startup(args);
 	}
 
-	public static void startup(final String... args) throws Exception {
+	public static void startup(final String... args) {
 		final String json = args.length>=1 ? args[0] : "service.json";
 		final ServerConfig config = ServerConfig.load(json);
 		new ClassicHttpd().startup(config);
 	}
 	
-	public void startup(final ServerConfig config) throws Exception {
+	public void startup(final ServerConfig config) {
 		final int port = config.getPort();
 
 		final HttpServer server = createHttpServer(config);
@@ -64,9 +65,13 @@ public class ClassicHttpd {
 			}
 		});
 
-		server.start();
-		LOG.info("Listening on port " + port);
-		server.awaitTermination(TimeValue.MAX_VALUE);
+		try {
+			server.start();
+			LOG.info("Listening on port " + port);
+			server.awaitTermination(TimeValue.MAX_VALUE);
+		} catch (IOException | InterruptedException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	protected HttpServer createHttpServer(final ServerConfig config) {
