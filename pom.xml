@@ -20,7 +20,7 @@
     <module>tamacat-httpd</module>
     <module>tamacat-httpd-jetty</module>
   </modules>
-  
+
   <scm>
     <url>https://github.com/tamacat-cloud/tamacat-httpd-2.0.git</url>
     <connection>scm:https://github.com/tamacat-cloud/tamacat-httpd-2.0.git</connection>
@@ -62,7 +62,7 @@
       <artifactId>logback-classic</artifactId>
       <version>1.2.11</version>
     </dependency>
-    
+
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-api</artifactId>

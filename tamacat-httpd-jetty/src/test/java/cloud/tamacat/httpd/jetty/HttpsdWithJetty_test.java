@@ -7,7 +7,7 @@ package cloud.tamacat.httpd.jetty;
 
 public class HttpsdWithJetty_test {
 
-	public static void main(String[] args) throws Exception {
+	public static void main(String[] args) {
 		HttpdWithJetty.startup("service-https.json");
 	}
 

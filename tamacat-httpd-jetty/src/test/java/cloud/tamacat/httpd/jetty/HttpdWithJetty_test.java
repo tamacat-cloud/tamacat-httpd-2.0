@@ -7,7 +7,7 @@ package cloud.tamacat.httpd.jetty;
 
 public class HttpdWithJetty_test {
 
-	public static void main(String[] args) throws Exception {
+	public static void main(String[] args) {
 		HttpdWithJetty.main(args);
 	}
 
