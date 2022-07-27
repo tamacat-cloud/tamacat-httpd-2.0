@@ -48,15 +48,17 @@ public class ReverseProxyHandler implements HttpRequestHandler {
 
 	static final Log LOG = LogFactory.getLog(ReverseProxyHandler.class);
 
+	//https://datatracker.ietf.org/doc/html/rfc2616#section-13.5.1
 	final static Set<String> HOP_BY_HOP = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
 		TextUtils.toLowerCase(HttpHeaders.HOST),
 		TextUtils.toLowerCase(HttpHeaders.CONTENT_LENGTH),
-		TextUtils.toLowerCase(HttpHeaders.TRANSFER_ENCODING),
 		TextUtils.toLowerCase(HttpHeaders.CONNECTION),
 		TextUtils.toLowerCase(HttpHeaders.KEEP_ALIVE),
 		TextUtils.toLowerCase(HttpHeaders.PROXY_AUTHENTICATE),
+		TextUtils.toLowerCase(HttpHeaders.PROXY_AUTHORIZATION),
 		TextUtils.toLowerCase(HttpHeaders.TE),
 		TextUtils.toLowerCase(HttpHeaders.TRAILER),
+		TextUtils.toLowerCase(HttpHeaders.TRANSFER_ENCODING),
 		TextUtils.toLowerCase(HttpHeaders.UPGRADE)
 	)));
 
@@ -85,6 +87,7 @@ public class ReverseProxyHandler implements HttpRequestHandler {
 
 		for (final Iterator<Header> it = incomingRequest.headerIterator(); it.hasNext();) {
 			final Header header = it.next();
+			//Delete End-to-end and Hop-by-hop Headers
 			if (!HOP_BY_HOP.contains(TextUtils.toLowerCase(header.getName()))) {
 				outgoingRequest.addHeader(header);
 			}
@@ -116,6 +119,7 @@ public class ReverseProxyHandler implements HttpRequestHandler {
 		//Copy response headers
 		for (final Iterator<Header> it = incomingResponse.headerIterator(); it.hasNext();) {
 			final Header header = it.next();
+			//Delete End-to-end and Hop-by-hop Headers
 			if (!HOP_BY_HOP.contains(TextUtils.toLowerCase(header.getName()))) {
 				outgoingResponse.addHeader(header);
 			}
