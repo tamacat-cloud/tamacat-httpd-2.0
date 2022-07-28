@@ -1,5 +1,5 @@
 /*
- * Copyright 2009, tamacat.org
+ * Copyright 2009 tamacat.org
  * Licensed under the Apache License, Version 2.0
  * http://www.apache.org/licenses/LICENSE-2.0
  */
@@ -47,6 +47,7 @@ public class LinkConvertingEntity extends HttpEntityWrapper {
 		super(entity);
 		this.before = before;
 		this.after = after;
+		this.contentLength = entity.getContentLength();
 		if (linkPatterns != null && linkPatterns.size() > 0) {
 			this.linkPatterns = linkPatterns;
 		} else {
@@ -59,6 +60,7 @@ public class LinkConvertingEntity extends HttpEntityWrapper {
 		super(entity);
 		this.before = before;
 		this.after = after;
+		this.contentLength = entity.getContentLength();
 		this.linkPatterns = new ArrayList<Pattern>();
 		if (linkPattern != null && linkPattern.length > 0) {
 			for (Pattern p : linkPattern) {
@@ -109,7 +111,7 @@ public class LinkConvertingEntity extends HttpEntityWrapper {
 				length += line.getBytes(charset).length;
 			}
 			if (before.length() != after.length()) {
-				contentLength = length;
+				this.contentLength = length;
 			}
 			writer.flush();
 		} catch (IOException e) {
@@ -127,7 +129,7 @@ public class LinkConvertingEntity extends HttpEntityWrapper {
 
 	public static ConvertData convertLink(String html, String before, String after, Pattern pattern) {
 		Matcher matcher = pattern.matcher(html);
-		StringBuffer result = new StringBuffer();
+		StringBuilder result = new StringBuilder();
 		boolean converted = false;
 		while (matcher.find()) {
 			String url = matcher.group(2);

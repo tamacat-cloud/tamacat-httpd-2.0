@@ -38,6 +38,7 @@
     <maven.build.timestamp.format>yyyyMMdd</maven.build.timestamp.format>
     <revision>SNAPSHOT</revision>
     <github.global.server>github</github.global.server>
+    <jib.build.tag>b${buildDate}</jib.build.tag>
   </properties>
 
   <dependencies>

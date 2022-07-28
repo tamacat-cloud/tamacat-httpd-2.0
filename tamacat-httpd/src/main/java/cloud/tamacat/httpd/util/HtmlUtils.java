@@ -31,7 +31,7 @@ public class HtmlUtils {
 	public static String getCharSet(String contentType) {
 		if (contentType != null) {
 			if (contentType.indexOf("=") >= 0) {
-				String[] values = contentType.split("=");
+				String[] values = StringUtils.split(contentType, "=");
 				if (values != null && values.length >= 2) {
 					String charset = values[1];
 					return charset.toLowerCase().trim();
@@ -52,7 +52,7 @@ public class HtmlUtils {
 		if (contentType != null) {
 			String value = contentType.getValue();
 			if (value.indexOf("=") >= 0) {
-				String[] values = value.split("=");
+				String[] values = StringUtils.split(value, "=");
 				if (values != null && values.length >= 2) {
 					String charset = values[1];
 					return charset.toLowerCase().trim();

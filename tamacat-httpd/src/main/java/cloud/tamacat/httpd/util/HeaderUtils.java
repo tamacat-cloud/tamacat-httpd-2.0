@@ -201,7 +201,7 @@ public final class HeaderUtils {
 			return true;
 		} else {
 			//Get the content sub type. (text/html; charset=UTF-8 -> html)
-			String[] types = type != null ? type.split(";")[0].split("/") : new String[0];
+			String[] types = type != null ? StringUtils.split(type, ";")[0].split("/") : new String[0];
 			if (types.length >= 2 && contentTypes.contains(types[1])) {
 				return true;
 			} else {

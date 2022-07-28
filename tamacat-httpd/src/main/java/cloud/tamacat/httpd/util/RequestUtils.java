@@ -15,6 +15,7 @@ import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.nio.charset.Charset;
 import java.util.Set;
 
 import org.apache.hc.core5.http.Header;
@@ -97,7 +98,7 @@ public class RequestUtils {
 		return uri;
 	}
 
-	public static RequestParameters parseParameters(HttpRequest request, HttpEntity entity, HttpContext context, String encoding) {
+	public static RequestParameters parseParameters(HttpRequest request, HttpEntity entity, HttpContext context, Charset encoding) {
 		synchronized (context) {
 			RequestParameters parameters = (RequestParameters) context.getAttribute(HTTP_REQUEST_PARAMETERS);
 			if (parameters == null) {
@@ -113,7 +114,7 @@ public class RequestUtils {
 		}
 	}
 	
-	public static RequestParameters parseParameters(HttpRequest request, HttpEntity entity, String encoding) {
+	public static RequestParameters parseParameters(HttpRequest request, HttpEntity entity, Charset encoding) {
 		RequestParameters parameters = new RequestParameters();
 		String path = request.getPath();
 		if (path.indexOf('?') >= 0) {
@@ -182,7 +183,7 @@ public class RequestUtils {
 	 * Get Request parameters
 	 * @since 1.4
 	 */
-	public static RequestParameters getParameters(HttpRequest request, HttpEntity entity, HttpContext context, String encoding) {
+	public static RequestParameters getParameters(HttpRequest request, HttpEntity entity, HttpContext context, Charset encoding) {
 		parseParameters(request, entity, context, encoding);
 		return getParameters(context);
 	}

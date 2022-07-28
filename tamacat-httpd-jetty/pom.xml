@@ -178,7 +178,7 @@
           <to>
             <image>tamacat/tamacat-httpd</image>
             <tags>
-              <tag>2.0-jetty-b20220719</tag>
+              <tag>2.0-jetty-${jib.build.tag}</tag>
               <tag>2.0-jetty-latest</tag>
             </tags>
           </to>

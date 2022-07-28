@@ -180,7 +180,7 @@
           <to>
             <image>tamacat/tamacat-httpd</image>
             <tags>
-              <tag>2.0-b20220719</tag>
+              <tag>2.0-${jib.build.tag}</tag>
               <tag>2.0-latest</tag>
             </tags>
           </to>

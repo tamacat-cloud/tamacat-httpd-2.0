@@ -12,7 +12,7 @@ import cloud.tamacat.util.StringUtils;
 
 /**
  * Properties file in CLASSPATH
- * - org/tamacat/httpd/mime-types.properties
+ * - cloud/tamacat/httpd/mime-types.properties
  * - mime-types.properties
  * hash data (key:file extention, value:content-type)
  */

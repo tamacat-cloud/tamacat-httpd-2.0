@@ -97,10 +97,10 @@ public class HtmlLinkConvertInterceptor implements HttpResponseInterceptor {
 	 */
 	public void setContentType(String contentType) {
 		if (StringUtils.isNotEmpty(contentType)) {
-			String[] csv = contentType.split(",");
+			String[] csv = StringUtils.split(contentType, ",");
 			for (String t : csv) {
 				contentTypes.add(t.trim().toLowerCase());
-				String[] types = t.split(";")[0].split("/");
+				String[] types = StringUtils.split(t, ";")[0].split("/");
 				if (types.length >= 2) {
 					contentTypes.add(types[1].trim().toLowerCase());
 				}
