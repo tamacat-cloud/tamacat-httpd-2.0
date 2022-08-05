@@ -1,4 +1,5 @@
 /*
+ * Copyright 2022 tamacat.org
  * ====================================================================
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -29,6 +30,7 @@ package cloud.tamacat.httpd.util;
 import java.util.Locale;
 
 /**
+ * @see
  * https://github.com/apache/httpcomponents-core/blob/master/httpcore5/src/main/java/org/apache/hc/core5/util/TextUtils.java
  */
 public final class TextUtils {

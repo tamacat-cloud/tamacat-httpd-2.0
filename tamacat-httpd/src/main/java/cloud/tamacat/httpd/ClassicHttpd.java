@@ -1,22 +1,36 @@
 /*
  * Copyright 2022 tamacat.org
- * Licensed under the Apache License, Version 2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package cloud.tamacat.httpd;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
 
 import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.http.HttpRequestInterceptor;
+import org.apache.hc.core5.http.HttpResponseInterceptor;
 import org.apache.hc.core5.http.impl.HttpProcessors;
 import org.apache.hc.core5.http.impl.bootstrap.HttpServer;
 import org.apache.hc.core5.http.impl.bootstrap.ServerBootstrap;
 import org.apache.hc.core5.http.io.HttpRequestHandler;
 import org.apache.hc.core5.http.io.SocketConfig;
+import org.apache.hc.core5.http.protocol.HttpProcessorBuilder;
 import org.apache.hc.core5.http.ssl.TLS;
 import org.apache.hc.core5.http.ssl.TlsCiphers;
 import org.apache.hc.core5.io.CloseMode;
@@ -28,6 +42,7 @@ import cloud.tamacat.httpd.config.ServiceConfig;
 import cloud.tamacat.httpd.listener.TraceExceptionListener;
 import cloud.tamacat.httpd.listener.TraceHttp1StreamListener;
 import cloud.tamacat.httpd.reverse.ReverseProxyHandler;
+import cloud.tamacat.httpd.reverse.html.HtmlLinkConvertInterceptor;
 import cloud.tamacat.httpd.tls.SSLSNIContextCreator;
 import cloud.tamacat.httpd.web.FileServerRequestHandler;
 import cloud.tamacat.httpd.web.ThymeleafServerRequestHandler;
@@ -41,6 +56,9 @@ import cloud.tamacat.util.StringUtils;
 public class ClassicHttpd {
 
 	static final Log LOG = LogFactory.getLog(ClassicHttpd.class);
+
+	protected Collection<HttpRequestInterceptor> httpRequestInterceptors = new ArrayList<>();
+	protected Collection<HttpResponseInterceptor> httpResponseInterceptors = new ArrayList<>();
 
 	public static void main(final String[] args) {
 		ClassicHttpd.startup(args);
@@ -76,11 +94,10 @@ public class ClassicHttpd {
 
 	protected HttpServer createHttpServer(final ServerConfig config) {
 		final Collection<ServiceConfig> configs = config.getServices();
-
+		
 		final ServerBootstrap bootstrap = ServerBootstrap.bootstrap()
 				.setCanonicalHostName(config.getHost())
 				.setListenerPort(config.getPort())
-				.setHttpProcessor(HttpProcessors.customServer(config.getServerName()).build())
 				.setStreamListener(new TraceHttp1StreamListener("client<-httpd"))
 				.setSocketConfig(SocketConfig.custom()
 				.setSoKeepAlive(config.keepAlive())
@@ -115,6 +132,11 @@ public class ClassicHttpd {
 				bootstrap.addFilterFirst(id, filter.getFilter(serviceConfig));
 			});
 		}
+
+		HttpProcessorBuilder HttpProcessorBuilder = HttpProcessors.customServer(config.getServerName());
+		httpRequestInterceptors.forEach(i-> HttpProcessorBuilder.add(i));
+		httpResponseInterceptors.forEach(i-> HttpProcessorBuilder.add(i));
+		bootstrap.setHttpProcessor(HttpProcessorBuilder.build());
 
 		bootstrap.setStreamListener(new TraceHttp1StreamListener())
 				 .setExceptionListener(new TraceExceptionListener());
@@ -161,6 +183,8 @@ public class ClassicHttpd {
 			final HttpHost targetHost = HttpHost.create(serviceConfig.getReverse().getTarget().toURI());
 			LOG.info("register: VirtualHost="+getVirtualHost(serviceConfig)+", path="+serviceConfig.getPath()+"* ReverseProxy to "+targetHost);
 			register(serviceConfig, bootstrap, new ReverseProxyHandler(targetHost, serviceConfig));
+			
+			httpResponseInterceptors.add(new HtmlLinkConvertInterceptor());
 		} catch (Exception e) {
 			LOG.error(e.getMessage(), e);
 		}
@@ -168,5 +192,13 @@ public class ClassicHttpd {
 	
 	protected String getVirtualHost(final ServiceConfig serviceConfig) {
 		return StringUtils.isNotEmpty(serviceConfig.getHostname()) ? serviceConfig.getHostname() : "default";
+	}
+	
+	public void addHttpRequestInterceptor(HttpRequestInterceptor interceptor) {
+		httpRequestInterceptors.add(interceptor);
+	}
+
+	public void addHttpResponseInterceptor(HttpResponseInterceptor interceptor) {
+		httpResponseInterceptors.add(interceptor);
 	}
 }

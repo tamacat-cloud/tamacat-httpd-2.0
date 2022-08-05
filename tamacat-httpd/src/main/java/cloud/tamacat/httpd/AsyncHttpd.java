@@ -1,11 +1,22 @@
 /*
  * Copyright 2019 tamacat.org
- * Licensed under the Apache License, Version 2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package cloud.tamacat.httpd;
 
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
@@ -15,11 +26,14 @@ import javax.net.ssl.SSLParameters;
 
 import org.apache.hc.core5.function.Supplier;
 import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.http.HttpRequestInterceptor;
+import org.apache.hc.core5.http.HttpResponseInterceptor;
 import org.apache.hc.core5.http.impl.HttpProcessors;
 import org.apache.hc.core5.http.impl.bootstrap.AsyncServerBootstrap;
 import org.apache.hc.core5.http.impl.bootstrap.HttpAsyncServer;
 import org.apache.hc.core5.http.nio.AsyncServerExchangeHandler;
 import org.apache.hc.core5.http.nio.ssl.BasicServerTlsStrategy;
+import org.apache.hc.core5.http.protocol.HttpProcessorBuilder;
 import org.apache.hc.core5.http.ssl.TLS;
 import org.apache.hc.core5.http.ssl.TlsCiphers;
 import org.apache.hc.core5.io.CloseMode;
@@ -33,6 +47,7 @@ import cloud.tamacat.httpd.config.ServerConfig;
 import cloud.tamacat.httpd.config.ServiceConfig;
 import cloud.tamacat.httpd.listener.TraceHttp1StreamListener;
 import cloud.tamacat.httpd.reverse.async.IncomingExchangeHandler;
+import cloud.tamacat.httpd.reverse.html.HtmlLinkConvertInterceptor;
 import cloud.tamacat.httpd.tls.SSLSNIContextCreator;
 import cloud.tamacat.httpd.web.async.FileServerRequestHandler;
 import cloud.tamacat.httpd.web.async.ThymeleafServerRequestHandler;
@@ -46,6 +61,9 @@ import cloud.tamacat.log.LogFactory;
 public class AsyncHttpd {
 
 	static final Log LOG = LogFactory.getLog(AsyncHttpd.class);
+
+	protected Collection<HttpRequestInterceptor> httpRequestInterceptors = new ArrayList<>();
+	protected Collection<HttpResponseInterceptor> httpResponseInterceptors = new ArrayList<>();
 
 	public static void main(final String[] args) {
 		AsyncHttpd.startup(args);
@@ -88,7 +106,6 @@ public class AsyncHttpd {
 				.setSoTimeout(config.getSoTimeout(), TimeUnit.SECONDS).build();
 			
 		final AsyncServerBootstrap bootstrap = AsyncServerBootstrap.bootstrap()
-			.setHttpProcessor(HttpProcessors.customServer(config.getServerName()).build())
 			.setIOReactorConfig(reactor)
 			.setStreamListener(new TraceHttp1StreamListener("client<-httpd"));
 
@@ -121,7 +138,12 @@ public class AsyncHttpd {
 				bootstrap.addFilterFirst(id, filter.getAsyncFilter(serviceConfig));
 			});
 		}
-				
+		
+		HttpProcessorBuilder HttpProcessorBuilder = HttpProcessors.customServer(config.getServerName());
+		httpRequestInterceptors.forEach(i-> HttpProcessorBuilder.add(i));
+		httpResponseInterceptors.forEach(i-> HttpProcessorBuilder.add(i));
+		bootstrap.setHttpProcessor(HttpProcessorBuilder.build());
+		
 		final HttpAsyncServer server = bootstrap.create();
 		return server;
 	}
@@ -168,8 +190,18 @@ public class AsyncHttpd {
 				}
 
 			});
+			
+			httpResponseInterceptors.add(new HtmlLinkConvertInterceptor());
 		} catch (Exception e) {
 			LOG.error(e.getMessage(), e);
 		}
+	}
+	
+	public void addHttpRequestInterceptor(HttpRequestInterceptor interceptor) {
+		httpRequestInterceptors.add(interceptor);
+	}
+
+	public void addHttpResponseInterceptor(HttpResponseInterceptor interceptor) {
+		httpResponseInterceptors.add(interceptor);
 	}
 }

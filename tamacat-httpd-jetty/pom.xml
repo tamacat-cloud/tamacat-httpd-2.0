@@ -175,6 +175,9 @@
         <artifactId>jib-maven-plugin</artifactId>
         <version>3.2.1</version>
         <configuration>
+          <from>
+            <image>gcr.io/distroless/java17</image>
+          </from>
           <to>
             <image>tamacat/tamacat-httpd</image>
             <tags>

@@ -23,6 +23,8 @@ import org.apache.hc.core5.http.protocol.HttpContext;
 
 import cloud.tamacat.httpd.config.ReverseConfig;
 import cloud.tamacat.httpd.util.HeaderUtils;
+import cloud.tamacat.log.Log;
+import cloud.tamacat.log.LogFactory;
 import cloud.tamacat.util.StringUtils;
 
 
@@ -32,6 +34,8 @@ import cloud.tamacat.util.StringUtils;
  */
 public class HtmlLinkConvertInterceptor implements HttpResponseInterceptor {
 
+	static final Log LOG = LogFactory.getLog(HtmlLinkConvertInterceptor.class);
+	
 	protected Set<String> contentTypes = new HashSet<String>();
 	protected List<Pattern> linkPatterns = new ArrayList<Pattern>();
 

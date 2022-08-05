@@ -144,7 +144,7 @@ public class LinkConvertingEntity extends HttpEntityWrapper {
 		return new ConvertData(result.toString(), converted);
 	}
 
-	static class ConvertData {
+	public static class ConvertData {
 		private final boolean converted;
 		private final String data;
 
