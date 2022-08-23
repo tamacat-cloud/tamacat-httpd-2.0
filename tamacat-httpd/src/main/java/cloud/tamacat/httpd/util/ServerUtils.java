@@ -38,10 +38,11 @@ public class ServerUtils {
 	static {
 		try {
 			serverHome = System.getProperty("server.home");
-			if (serverHome == null) serverHome = System.getProperty("user.dir");
+			if (serverHome == null) {
+				serverHome = System.getProperty("user.dir");
+			}
 			File home = new File(serverHome);
-			serverHome = home.getCanonicalPath();
-			System.out.println(serverHome);
+			serverHome = home.getCanonicalPath().replace("\\", "/");
 		} catch (Exception e) {
 			LOG.error(e);
 		}

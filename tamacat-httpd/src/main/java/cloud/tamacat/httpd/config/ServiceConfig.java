@@ -24,11 +24,15 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 import cloud.tamacat.httpd.util.ServerUtils;
+import cloud.tamacat.log.Log;
+import cloud.tamacat.log.LogFactory;
 import cloud.tamacat.util.CollectionUtils;
 import cloud.tamacat.util.JsonUtils;
 import cloud.tamacat.util.StringUtils;
 
 public class ServiceConfig {
+	
+	static final Log LOG = LogFactory.getLog(ServiceConfig.class);
 	
 	@SerializedName("host")
 	@Expose
@@ -152,8 +156,14 @@ public class ServiceConfig {
 	}
 	
 	public String getDocsRoot() {
+		String docsRoot = this.docsRoot;
+		String serverHome = getServerHome();
+		if (docsRoot == null) {
+			docsRoot = serverHome + "/htdocs/root";
+			LOG.warn("The docsRoot was empty. Use default: "+docsRoot);
+		}
 		if (docsRoot.indexOf("${server.home}") >= 0) {
-			this.docsRoot = docsRoot.replace("${server.home}", getServerHome()).replace("\\", "/");
+			docsRoot = docsRoot.replace("${server.home}", serverHome);
 		}
 		return docsRoot;
 	}
