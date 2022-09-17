@@ -37,6 +37,10 @@ public class ReverseConfig {
 	
 	private URL host;
 	
+	public static ReverseConfig create() {
+		return new ReverseConfig();
+	}
+	
 	public void setServiceConfig(ServiceConfig serviceConfig) {
 		this.serviceConfig = serviceConfig;
 	}
@@ -49,6 +53,7 @@ public class ReverseConfig {
 		try {
 			URL targetUrl = new URL(url);
 			this.target = new HttpHost(targetUrl.getHost(), targetUrl.getPort());
+			this.url = url;
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		}
@@ -88,6 +93,7 @@ public class ReverseConfig {
 			return new URL(url);
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
+			System.out.println(url);
 		}
 		return null;
 	}

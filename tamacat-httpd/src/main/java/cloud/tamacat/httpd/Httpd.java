@@ -25,12 +25,14 @@ public class Httpd {
 	
 	public static void startup(final String... args) {
 		final String json = args.length >= 1 ? args[0] : "service.json";
-		final ServerConfig config = ServerConfig.load(json);
-		
-		if ("async".equalsIgnoreCase(config.getServerType())) {			
-			new AsyncHttpd().startup(config);
+		startup(ServerConfig.load(json));
+	}
+	
+	public static void startup(final ServerConfig config) {		
+		if (config.isAsync()) {
+			AsyncHttpd.startup(config);
 		} else {
-			new ClassicHttpd().startup(config);
+			ClassicHttpd.startup(config);
 		}
 	}
 }

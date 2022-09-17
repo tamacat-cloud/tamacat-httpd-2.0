@@ -81,8 +81,17 @@ public class ServiceConfig {
 	protected ServerConfig serverConfig;
 	protected String serverHome;
 
+	public static ServiceConfig create() {
+		return new ServiceConfig();
+	}
+	
 	public void setServerConfig(ServerConfig serverConfig) {
 		this.serverConfig = serverConfig;
+	}
+	
+	public ServiceConfig serverConfig(ServerConfig serverConfig) {
+		this.serverConfig = serverConfig;
+		return this;
 	}
 	
 	public ServerConfig getServerConfig() {
@@ -179,7 +188,7 @@ public class ServiceConfig {
 	
 	public boolean isReverseProxy() {
 		return isType("reverse") 
-			&& (reverses.size()>=1 || (reverse != null && StringUtils.isNotEmpty(reverse.getUrl())));
+			|| (reverses.size()>=1 || (reverse != null && StringUtils.isNotEmpty(reverse.getUrl())));
 	}
 	
 	public boolean isType(String name) {
@@ -202,7 +211,10 @@ public class ServiceConfig {
 	}
 
 	public ServiceConfig reverse(ReverseConfig reverse) {
-		this.reverse = reverse;
+		if (reverse != null) {
+			this.reverse = reverse;
+			this.type = "reverse";
+		}
 		return this;
 	}
 

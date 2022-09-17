@@ -72,11 +72,11 @@ public class AsyncHttpd {
 	public static void startup(final String... args) {
 		final String json = args.length>=1 ? args[0] : "service.json";
 		final ServerConfig config = ServerConfig.load(json);
-		new AsyncHttpd().startup(config);
+		AsyncHttpd.startup(config);
 	}
 	
-	public void startup(final ServerConfig config) {
-		final HttpAsyncServer server = createHttpAsyncServer(config);
+	public static void startup(final ServerConfig config) {
+		final HttpAsyncServer server = new AsyncHttpd().createHttpAsyncServer(config);
 		final int port = config.getPort();
 
 		Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -99,7 +99,7 @@ public class AsyncHttpd {
 		}
 	}
 	
-	protected HttpAsyncServer createHttpAsyncServer(final ServerConfig config) {
+	public HttpAsyncServer createHttpAsyncServer(final ServerConfig config) {
 		final Collection<ServiceConfig> configs = config.getServices();
 
 		final IOReactorConfig reactor = IOReactorConfig.custom()

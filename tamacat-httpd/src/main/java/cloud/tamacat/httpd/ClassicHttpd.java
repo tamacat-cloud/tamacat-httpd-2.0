@@ -67,13 +67,13 @@ public class ClassicHttpd {
 	public static void startup(final String... args) {
 		final String json = args.length>=1 ? args[0] : "service.json";
 		final ServerConfig config = ServerConfig.load(json);
-		new ClassicHttpd().startup(config);
+		ClassicHttpd.startup(config);
 	}
 	
-	public void startup(final ServerConfig config) {
+	public static void startup(final ServerConfig config) {
 		final int port = config.getPort();
 
-		final HttpServer server = createHttpServer(config);
+		final HttpServer server = new ClassicHttpd().createHttpServer(config);
 
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
@@ -92,7 +92,7 @@ public class ClassicHttpd {
 		}
 	}
 
-	protected HttpServer createHttpServer(final ServerConfig config) {
+	public HttpServer createHttpServer(final ServerConfig config) {
 		final Collection<ServiceConfig> configs = config.getServices();
 		
 		final ServerBootstrap bootstrap = ServerBootstrap.bootstrap()

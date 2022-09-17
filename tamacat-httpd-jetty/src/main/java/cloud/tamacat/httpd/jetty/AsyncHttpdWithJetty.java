@@ -48,12 +48,11 @@ public class AsyncHttpdWithJetty extends AsyncHttpd {
 	public static void startup(final String... args) {
 		final String json = args.length>=1 ? args[0] : "service.json";
 		final ServerConfig config = ServerConfig.load(json);
-		new AsyncHttpdWithJetty().startup(config);
+		AsyncHttpdWithJetty.startup(config);
 	}
 	
-	@Override
-	public void startup(final ServerConfig config) {
-		final HttpAsyncServer server = createHttpAsyncServer(config);
+	public static void startup(final ServerConfig config) {
+		final HttpAsyncServer server = new AsyncHttpdWithJetty().createHttpAsyncServer(config);
 		final int port = config.getPort();
 
 		JettyManager.getInstance().start();

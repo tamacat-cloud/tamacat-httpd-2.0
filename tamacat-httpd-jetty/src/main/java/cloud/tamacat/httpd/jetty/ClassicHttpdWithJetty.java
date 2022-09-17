@@ -45,14 +45,13 @@ public class ClassicHttpdWithJetty extends ClassicHttpd {
 	public static void startup(final String... args) {
 		final String json = args.length>=1 ? args[0] : "service.json";
 		final ServerConfig config = ServerConfig.load(json);
-		new ClassicHttpdWithJetty().startup(config);
+		ClassicHttpdWithJetty.startup(config);
 	}
 	
-	@Override
-	public void startup(final ServerConfig config) {
+	public static void startup(final ServerConfig config) {
 		final int port = config.getPort();
 
-		final HttpServer server = createHttpServer(config);
+		final HttpServer server = new ClassicHttpdWithJetty().createHttpServer(config);
 		if (config.useJetty()) {
 			JettyManager.getInstance().start();
 		}

@@ -76,8 +76,34 @@ public class ServerConfig implements Serializable {
 	@Expose
 	HttpsConfig httpsConfig;
 	
+	public static ServerConfig create() {
+		return new ServerConfig();
+	}
+	
+	public static ServerConfig createAsync() {
+		return new ServerConfig().async();
+	}
+	
 	public String getServerType() {
 		return serverType;
+	}
+	
+	public void setServerType(final String serverType) {
+		this.serverType = serverType;
+	}
+	
+	public ServerConfig serverType(final String serverType) {
+		this.serverType = serverType;
+		return this;
+	}
+	
+	public ServerConfig async() {
+		setServerType("async");
+		return this;
+	}
+	
+	public boolean isAsync() {
+		return "async".equalsIgnoreCase(serverType);
 	}
 	
 	public String getServerName() {
@@ -190,6 +216,16 @@ public class ServerConfig implements Serializable {
 
 	public void setServices(Collection<ServiceConfig> services) {
 		this.services = services;
+	}
+	
+	public ServerConfig service(ServiceConfig service) {
+		this.services.add(service);
+		return this;
+	}
+	
+	public ServerConfig services(Collection<ServiceConfig> services) {
+		this.services = services;
+		return this;
 	}
 	
 	public boolean useJetty() {

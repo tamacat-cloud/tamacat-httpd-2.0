@@ -1,0 +1,6 @@
+{
+    "maven.terminal.useJavaHome": true,
+    "maven.executable.path": "D:\\maven\\bin",
+    "java.configuration.maven.globalSettings": "D:\\maven\\conf\\settings.xml",
+    "java.maven.downloadSources": true
+}
