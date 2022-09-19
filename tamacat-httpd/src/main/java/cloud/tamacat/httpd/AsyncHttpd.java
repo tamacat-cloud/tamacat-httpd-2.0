@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 tamacat.org
+ * Copyright 2022 tamacat.org
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -133,9 +133,15 @@ public class AsyncHttpd {
 			
 			register(serviceConfig, bootstrap);
 			
-			//add filter
-			serviceConfig.getFilters().forEach((id, filter)->{
+			//add filters from FilterConfig(components.xml)
+			serviceConfig.getFilters().forEach((id, filter) -> {
 				bootstrap.addFilterFirst(id, filter.getAsyncFilter(serviceConfig));
+			});
+			
+			//add AsyncFilters
+			serviceConfig.getAsyncFilters().forEach((filter) -> {
+				filter.serverConfig(serviceConfig);
+				bootstrap.addFilterFirst(filter.toString(), filter);
 			});
 		}
 		

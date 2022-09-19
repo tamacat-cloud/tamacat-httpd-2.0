@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package cloud.tamacat.httpd.filter;
+package cloud.tamacat.httpd.filter.async;
 
 import java.io.IOException;
 
@@ -24,50 +24,76 @@ import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.nio.AsyncDataConsumer;
 import org.apache.hc.core5.http.nio.AsyncEntityProducer;
 import org.apache.hc.core5.http.nio.AsyncFilterChain;
-import org.apache.hc.core5.http.nio.AsyncFilterChain.ResponseTrigger;
+import org.apache.hc.core5.http.nio.AsyncFilterHandler;
 import org.apache.hc.core5.http.nio.AsyncPushProducer;
+import org.apache.hc.core5.http.nio.AsyncFilterChain.ResponseTrigger;
 import org.apache.hc.core5.http.protocol.HttpContext;
 
-import cloud.tamacat.log.Log;
-import cloud.tamacat.log.LogFactory;
+import cloud.tamacat.httpd.config.ServiceConfig;
 
 /**
- * Response Filter
+ * Request/Response Filter
  */
-public class AsyncHtmlConvertFilter extends AsyncFilter {
+public abstract class AsyncHttpFilter implements AsyncFilterHandler {
 
-	static final Log LOG = LogFactory.getLog(AsyncHtmlConvertFilter.class);
+	protected ServiceConfig serviceConfig;
+	protected String path;
+	
+	public void setServerConfig(ServiceConfig serviceConfig) {
+		this.serviceConfig = serviceConfig;
+		this.path = serviceConfig.getPath();
+	}
+	
+	public AsyncHttpFilter serverConfig(ServiceConfig serviceConfig) {
+		setServerConfig(serviceConfig);
+		return this;
+	}
+	
+	public ServiceConfig getServiceConfig() {
+		return serviceConfig;
+	}
 	
 	@Override
 	public AsyncDataConsumer handle(HttpRequest request, EntityDetails entityDetails, HttpContext context,
 			ResponseTrigger responseTrigger, AsyncFilterChain chain) throws HttpException, IOException {
-		
-		LOG.trace("execute="+request.getPath().startsWith(serviceConfig.getPath()) );
 		if (request.getPath().startsWith(serviceConfig.getPath()) == false) {
 			return chain.proceed(request, entityDetails, context, responseTrigger);
 		}
+		
+		handleRequest(request, entityDetails, context);
 		
         return chain.proceed(request, entityDetails, context, new AsyncFilterChain.ResponseTrigger() {
 
 			@Override
 			public void sendInformation(HttpResponse response) throws HttpException, IOException {
-				LOG.trace("#sendInformation");
+				handleSendInformation(response);
 				responseTrigger.sendInformation(response);
 			}
 			
 			@Override
 			public void submitResponse(HttpResponse response, AsyncEntityProducer entityProducer)
 					throws HttpException, IOException {
-				LOG.trace("#submitResponse");
-				
+				handleSendInformation(response);
                 responseTrigger.submitResponse(response, entityProducer);
 			}
 
 			@Override
 			public void pushPromise(HttpRequest promise, AsyncPushProducer responseProducer) throws HttpException, IOException {
-				LOG.trace("#pushPromise");
-                responseTrigger.pushPromise(promise, responseProducer);
+                handlePushPromise(promise, responseProducer);
+				responseTrigger.pushPromise(promise, responseProducer);
 			}
 		});
+	}
+	
+	protected void handleRequest(HttpRequest request, EntityDetails entityDetails, HttpContext context) throws HttpException, IOException {
+	}
+	
+	protected void handleSendInformation(HttpResponse response) throws HttpException, IOException {
+	}
+	
+	protected void handleSubmitResponse(HttpResponse response, AsyncEntityProducer entityProducer) throws HttpException, IOException {
+	}
+
+	protected void handlePushPromise(HttpRequest promise, AsyncPushProducer responseProducer) throws HttpException, IOException {
 	}
 }

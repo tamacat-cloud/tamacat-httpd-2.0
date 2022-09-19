@@ -19,8 +19,8 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 import cloud.tamacat.di.DI;
-import cloud.tamacat.httpd.filter.AsyncFilter;
-import cloud.tamacat.httpd.filter.Filter;
+import cloud.tamacat.httpd.filter.HttpFilter;
+import cloud.tamacat.httpd.filter.async.AsyncHttpFilter;
 
 public class FilterConfig {
 
@@ -45,11 +45,11 @@ public class FilterConfig {
 		return this;
 	}
 
-	public Filter getFilter(ServiceConfig serviceConfig) {
-		return DI.configure(config).getBean(id, Filter.class).serverConfig(serviceConfig);
+	public HttpFilter getFilter(ServiceConfig serviceConfig) {
+		return DI.configure(config).getBean(id, HttpFilter.class).serverConfig(serviceConfig);
 	}
 	
-	public AsyncFilter getAsyncFilter(ServiceConfig serviceConfig) {
-		return DI.configure(config).getBean(id, AsyncFilter.class).serverConfig(serviceConfig);
+	public AsyncHttpFilter getAsyncFilter(ServiceConfig serviceConfig) {
+		return DI.configure(config).getBean(id, AsyncHttpFilter.class).serverConfig(serviceConfig);
 	}
 }

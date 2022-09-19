@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package cloud.tamacat.httpd.filter;
+package cloud.tamacat.httpd.filter.async;
 
 import java.io.IOException;
 import java.util.Map;
@@ -37,7 +37,7 @@ import cloud.tamacat.util.StringUtils;
 /**
  * Response Filter
  */
-public class AsyncResponseFilter extends AsyncFilter {
+public class AsyncResponseFilter extends AsyncHttpFilter {
 
 	static final Log LOG = LogFactory.getLog(AsyncResponseFilter.class);
 	

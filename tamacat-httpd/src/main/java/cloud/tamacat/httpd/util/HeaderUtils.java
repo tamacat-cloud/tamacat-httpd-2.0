@@ -66,7 +66,7 @@ public final class HeaderUtils {
 	public static String getHeader(
 			HttpMessage message, String name, String defaultValue) {
 		Header header = message.getFirstHeader(name);
-		return header != null ? header.getValue() : defaultValue;
+		return header != null ? header.getValue() : deleteCRLF(defaultValue);
 	}
 
 	/**
@@ -93,7 +93,7 @@ public final class HeaderUtils {
 	public static List<HttpCookie> getCookies(String cookie) {
 		List<HttpCookie> cookies = new ArrayList<>();
 		if (StringUtils.isEmpty(cookie)) return cookies;
-		StringTokenizer token = new StringTokenizer(cookie, ";");
+		StringTokenizer token = new StringTokenizer(deleteCRLF(cookie), ";");
 		if (token != null) {
 			while (token.hasMoreTokens()) {
 				String line = token.nextToken();
@@ -128,7 +128,7 @@ public final class HeaderUtils {
 	 */
 	public static String getCookieValue(String cookie, String name) {
 		if (StringUtils.isEmpty(cookie)) return null;
-		StringTokenizer token = new StringTokenizer(cookie, ";");
+		StringTokenizer token = new StringTokenizer(deleteCRLF(cookie), ";");
 		if (token != null) {
 			while (token.hasMoreTokens()) {
 				String line = token.nextToken();
@@ -227,5 +227,17 @@ public final class HeaderUtils {
 	
 	public static boolean isMultipart(String line) {
 		return line != null && line.toLowerCase().startsWith("multipart/");
+	}
+	
+	/**
+	 * delete CRLF
+	 * @param str
+	 */
+	public static String deleteCRLF(String str) {
+		if (str != null && str.length() > 0 ) {
+			return str.replace("\r", "").replace("\n","");
+		} else {
+			return str;
+		}
 	}
 }

@@ -131,6 +131,12 @@ public class ClassicHttpd {
 			serviceConfig.getFilters().forEach((id, filter) -> {
 				bootstrap.addFilterFirst(id, filter.getFilter(serviceConfig));
 			});
+			
+			//add HttpFilters
+			serviceConfig.getHttpFilters().forEach((filter) -> {
+				filter.serverConfig(serviceConfig);
+				bootstrap.addFilterFirst(filter.toString(), filter);
+			});
 		}
 
 		HttpProcessorBuilder HttpProcessorBuilder = HttpProcessors.customServer(config.getServerName());

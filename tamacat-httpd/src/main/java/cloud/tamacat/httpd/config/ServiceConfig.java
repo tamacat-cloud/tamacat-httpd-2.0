@@ -23,6 +23,8 @@ import java.util.Map;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import cloud.tamacat.httpd.filter.HttpFilter;
+import cloud.tamacat.httpd.filter.async.AsyncHttpFilter;
 import cloud.tamacat.httpd.util.ServerUtils;
 import cloud.tamacat.log.Log;
 import cloud.tamacat.log.LogFactory;
@@ -76,7 +78,10 @@ public class ServiceConfig {
 	
 	@SerializedName("filters")
 	@Expose
-	Map<String, FilterConfig> filters = CollectionUtils.newLinkedHashMap();
+	Map<String, FilterConfig> filterConfigs = CollectionUtils.newLinkedHashMap();
+
+	Collection<HttpFilter> httpFilters = CollectionUtils.newArrayList();
+	Collection<AsyncHttpFilter> asyncFilters = CollectionUtils.newArrayList();
 
 	protected ServerConfig serverConfig;
 	protected String serverHome;
@@ -228,15 +233,35 @@ public class ServiceConfig {
 	}
 	
 	public Map<String, FilterConfig> getFilters() {
-		return filters;
+		return filterConfigs;
 	}
 
-	public void setFilters(Map<String, FilterConfig> filters) {
-		this.filters = filters;
+	public ServiceConfig filter(HttpFilter filter) {
+		this.httpFilters.add(filter);
+		return this;
 	}
 	
-	public ServiceConfig filters(Map<String, FilterConfig> filters) {
-		setFilters(filters);
+	public ServiceConfig filter(AsyncHttpFilter filter) {
+		this.asyncFilters.add(filter);
+		return this;
+	}
+	
+	public Collection<HttpFilter> getHttpFilters() {
+		return httpFilters;
+	}
+	
+	public Collection<AsyncHttpFilter> getAsyncFilters() {
+		return asyncFilters;
+	}
+	
+	public void setFilters(Map<String, FilterConfig> filterConfigs) {
+		filterConfigs.forEach((id, filterConfig) -> {
+			asyncFilters.add(filterConfig.getAsyncFilter(this));
+		});
+	}
+	
+	public ServiceConfig filters(Map<String, FilterConfig> filterConfigs) {
+		setFilters(filterConfigs);
 		return this;
 	}
 	

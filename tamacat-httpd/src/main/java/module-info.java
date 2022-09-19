@@ -18,6 +18,7 @@ module cloud.tamacat.httpd {
 	exports cloud.tamacat.httpd;
 	exports cloud.tamacat.httpd.core;
 	exports cloud.tamacat.httpd.filter;
+	exports cloud.tamacat.httpd.filter.async;
 	exports cloud.tamacat.httpd.listener;
 	exports cloud.tamacat.httpd.reverse;
 	exports cloud.tamacat.httpd.reverse.async;
@@ -33,6 +34,7 @@ module cloud.tamacat.httpd {
 	opens cloud.tamacat.httpd.core;
 	opens cloud.tamacat.httpd.error;
 	opens cloud.tamacat.httpd.filter;
+	opens cloud.tamacat.httpd.filter.async;
 	opens cloud.tamacat.httpd.listener;
 	opens cloud.tamacat.httpd.reverse;
 	opens cloud.tamacat.httpd.reverse.async;
