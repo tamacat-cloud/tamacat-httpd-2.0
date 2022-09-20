@@ -61,7 +61,7 @@ public class LinkConvertingEntity extends HttpEntityWrapper {
 		this.before = before;
 		this.after = after;
 		this.contentLength = entity.getContentLength();
-		this.linkPatterns = new ArrayList<Pattern>();
+		this.linkPatterns = new ArrayList<>();
 		if (linkPattern != null && linkPattern.length > 0) {
 			for (Pattern p : linkPattern) {
 				this.linkPatterns.add(p);
@@ -133,7 +133,7 @@ public class LinkConvertingEntity extends HttpEntityWrapper {
 		boolean converted = false;
 		while (matcher.find()) {
 			String url = matcher.group(2);
-			if (url.startsWith("http://") || url.startsWith("https://")) {
+			if (url.startsWith("/")==false || url.startsWith("http://") || url.startsWith("https://")) {
 				continue;
 			}
 			String rev = matcher.group().replaceFirst(before, after);

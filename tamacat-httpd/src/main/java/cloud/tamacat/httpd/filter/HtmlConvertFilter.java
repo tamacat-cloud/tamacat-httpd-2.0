@@ -16,6 +16,9 @@
 package cloud.tamacat.httpd.filter;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Pattern;
 
 import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.ClassicHttpResponse;
@@ -23,6 +26,7 @@ import org.apache.hc.core5.http.HttpEntity;
 import org.apache.hc.core5.http.HttpException;
 import org.apache.hc.core5.http.protocol.HttpContext;
 
+import cloud.tamacat.httpd.config.ReverseConfig;
 import cloud.tamacat.httpd.reverse.html.LinkConvertingEntity;
 import cloud.tamacat.httpd.util.HeaderUtils;
 import cloud.tamacat.log.Log;
@@ -35,19 +39,38 @@ public class HtmlConvertFilter extends HttpFilter {
 
 	static final Log LOG = LogFactory.getLog(HtmlConvertFilter.class);
 
+	protected List<Pattern> linkPatterns = new ArrayList<>();
+
+	/**
+	 * Add link convert pattern.
+	 * @param regex The expression to be compiled.(case insensitive)
+	 */
+	public HtmlConvertFilter addLinkPattern(String regex) {
+		this.linkPatterns.add(Pattern.compile(regex, Pattern.CASE_INSENSITIVE));
+		return this;
+	}
+
 	@Override
 	protected void handleRequest(ClassicHttpRequest request, HttpContext context) throws HttpException, IOException {
 		request.removeHeaders("Accept-Encoding");
 	}
 	
 	@Override
-	protected void handleSubmitResponse(ClassicHttpResponse response) throws HttpException, IOException {
+	protected void handleSubmitResponse(ClassicHttpResponse response, HttpContext context) throws HttpException, IOException {
 		if (HeaderUtils.getHeader(response, "Content-Type").startsWith("text/html")) {
-			HttpEntity entity = response.getEntity();
-			if (entity != null) {
-				response.setEntity(new LinkConvertingEntity(entity, "/", "/"));
-				//response.setHeader("Transfer-Encoding", "chunked"); //Transfer-Encoding:chunked
-				//response.removeHeaders("Content-Length");
+			ReverseConfig reverse = (ReverseConfig) context.getAttribute(ReverseConfig.class.getName());
+			if (reverse != null) {
+				String before = reverse.getReverse().getPath();
+				String after = reverse.getServiceConfig().getPath();
+
+				HttpEntity entity = response.getEntity();
+
+				if (entity != null && (before.equals(after)==false)) {
+					LOG.debug("[convert] "+before+"->"+after);
+					response.setEntity(new LinkConvertingEntity(entity, before, after, linkPatterns));
+					//response.setHeader("Transfer-Encoding", "chunked"); //Transfer-Encoding:chunked
+					response.removeHeaders("Content-Length");
+				}
 			}
 		}
 	}

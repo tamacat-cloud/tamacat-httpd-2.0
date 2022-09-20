@@ -19,6 +19,7 @@ import java.io.IOException;
 
 import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.HttpException;
+import org.apache.hc.core5.http.protocol.HttpContext;
 
 import cloud.tamacat.log.Log;
 import cloud.tamacat.log.LogFactory;
@@ -59,7 +60,7 @@ public class ResponseFilter extends HttpFilter {
 	}
 
 	@Override
-	protected void handleSubmitResponse(ClassicHttpResponse response) throws HttpException, IOException {
+	protected void handleSubmitResponse(ClassicHttpResponse response, HttpContext context) throws HttpException, IOException {
 		headers.removeHeaders(response);
 		headers.addHeaders(response);
 	}

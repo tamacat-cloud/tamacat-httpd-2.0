@@ -89,7 +89,7 @@ public class ReverseProxyHandler implements HttpRequestHandler {
 			final HttpContext serverContext) throws HttpException, IOException {
 		final long startTime = System.currentTimeMillis();
 		final HttpCoreContext clientContext = HttpCoreContext.create();
-		
+		serverContext.setAttribute(ReverseConfig.class.getName(), reverseConfig);
 		final String reverseTargetPath = ReverseUtils.getReverseTargetPath(reverseConfig, incomingRequest.getPath());
 		final ClassicHttpRequest outgoingRequest = new BasicClassicHttpRequest(
 				incomingRequest.getMethod(), targetHost, reverseTargetPath);

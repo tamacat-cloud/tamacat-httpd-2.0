@@ -60,13 +60,13 @@ public abstract class HttpFilter implements HttpFilterHandler {
 			chain.proceed(request, new HttpFilterChain.ResponseTrigger() {
 				@Override
 				public void sendInformation(ClassicHttpResponse response) throws HttpException, IOException {
-					handleSendInformation(response);
+					handleSendInformation(response, context);
 					responseTrigger.sendInformation(response);
 				}
 	
 				@Override
 				public void submitResponse(ClassicHttpResponse response) throws HttpException, IOException {
-					handleSubmitResponse(response);
+					handleSubmitResponse(response, context);
 					responseTrigger.submitResponse(response);
 				}
 			}, context);
@@ -76,9 +76,9 @@ public abstract class HttpFilter implements HttpFilterHandler {
 	protected void handleRequest(ClassicHttpRequest request, HttpContext context) throws HttpException, IOException {
 	}
 	
-	protected void handleSendInformation(ClassicHttpResponse response) throws HttpException, IOException {
+	protected void handleSendInformation(ClassicHttpResponse response, HttpContext context) throws HttpException, IOException {
 	}
 
-	protected void handleSubmitResponse(ClassicHttpResponse response) throws HttpException, IOException {
+	protected void handleSubmitResponse(ClassicHttpResponse response, HttpContext context) throws HttpException, IOException {
 	}
 }

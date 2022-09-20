@@ -25,7 +25,7 @@
  * <http://www.apache.org/>.
  *
  */
-package cloud.tamacat.httpd.web;
+package cloud.tamacat.httpd.web.async;
 
 import java.io.File;
 import java.net.InetSocketAddress;
@@ -40,7 +40,6 @@ import org.apache.hc.core5.reactor.IOReactorConfig;
 import org.apache.hc.core5.reactor.ListenerEndpoint;
 import org.apache.hc.core5.util.TimeValue;
 
-import cloud.tamacat.httpd.web.async.FileServerRequestHandler;
 import cloud.tamacat.log.Log;
 import cloud.tamacat.log.LogFactory;
 
