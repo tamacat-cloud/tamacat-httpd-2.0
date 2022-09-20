@@ -16,3 +16,6 @@ logs
 
 .DS_Store
 
+.vscode/settings.json
+
+!.gitkeep
