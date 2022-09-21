@@ -152,8 +152,7 @@ public class LinkConvertingEntityTest {
 	public void testUseLinkConvert_A_HREF4() {
 		String html = "<html><a href=\"test/index.html\">TEST</a></html>";
 		html = LinkConvertingEntity.convertLink(html, "/", "/zzzz/", HtmlUtils.LINK_PATTERN).getData();
-		assertEquals("<html><a href=\"test/zzzz/index.html\">TEST</a></html>", html);
-		//assertEquals("<html><a href=\"test/index.html\">TEST</a></html>", html); //TODO v1.5 compatible
+		assertEquals("<html><a href=\"test/index.html\">TEST</a></html>", html);
 	}
 	
 	@Test
