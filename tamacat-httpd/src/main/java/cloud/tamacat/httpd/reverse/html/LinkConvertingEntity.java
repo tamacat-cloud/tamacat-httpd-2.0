@@ -134,11 +134,17 @@ public class LinkConvertingEntity extends HttpEntityWrapper {
 		while (matcher.find()) {
 			String url = matcher.group(2);
 			if (url.startsWith("/")==false || url.startsWith("http://") || url.startsWith("https://")) {
+				if (LOG.isTraceEnabled()) {
+					LOG.trace("[skip] " +url);
+				}
 				continue;
 			}
 			String rev = matcher.group().replaceFirst(before, after);
 			matcher.appendReplacement(result, rev.replace("$", "\\$"));
 			converted = true;
+			if (LOG.isTraceEnabled()) {
+				LOG.trace("[converted] "+url+" -> "+url.replaceFirst(before, after));
+			}
 		}
 		matcher.appendTail(result);
 		return new ConvertData(result.toString(), converted);

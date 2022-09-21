@@ -145,10 +145,10 @@ public class AsyncHttpd {
 			});
 		}
 		
-		HttpProcessorBuilder HttpProcessorBuilder = HttpProcessors.customServer(config.getServerName());
-		httpRequestInterceptors.forEach(i-> HttpProcessorBuilder.add(i));
-		httpResponseInterceptors.forEach(i-> HttpProcessorBuilder.add(i));
-		bootstrap.setHttpProcessor(HttpProcessorBuilder.build());
+		HttpProcessorBuilder httpProcessorBuilder = HttpProcessors.customServer(config.getServerName());
+		httpRequestInterceptors.forEach(i-> httpProcessorBuilder.add(i));
+		httpResponseInterceptors.forEach(i-> httpProcessorBuilder.add(i));
+		bootstrap.setHttpProcessor(httpProcessorBuilder.build());
 		
 		final HttpAsyncServer server = bootstrap.create();
 		return server;

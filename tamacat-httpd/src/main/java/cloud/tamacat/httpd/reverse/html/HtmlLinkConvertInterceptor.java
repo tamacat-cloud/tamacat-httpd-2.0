@@ -15,6 +15,7 @@ import java.util.regex.Pattern;
 import org.apache.hc.core5.http.EntityDetails;
 import org.apache.hc.core5.http.Header;
 import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.HttpEntityContainer;
 import org.apache.hc.core5.http.HttpException;
 import org.apache.hc.core5.http.HttpHeaders;
 import org.apache.hc.core5.http.HttpResponse;
@@ -26,7 +27,6 @@ import cloud.tamacat.httpd.util.HeaderUtils;
 import cloud.tamacat.log.Log;
 import cloud.tamacat.log.LogFactory;
 import cloud.tamacat.util.StringUtils;
-
 
 /**
  * <p>
@@ -54,24 +54,22 @@ public class HtmlLinkConvertInterceptor implements HttpResponseInterceptor {
 
 	@Override
 	public void process(HttpResponse response, EntityDetails entity, HttpContext context) throws HttpException, IOException {
+		if (response instanceof HttpEntityContainer == false || entity == null || entity instanceof HttpEntity == false) return;
 		if (context == null) {
 			throw new IllegalArgumentException("HTTP context may not be null");
 		}
-		ReverseConfig reverseUrl = (ReverseConfig) context.getAttribute("reverseUrl");
+		ReverseConfig reverseUrl = (ReverseConfig) context.getAttribute(ReverseConfig.class.getName());
 		if (reverseUrl != null) {
 			Header header = response.getFirstHeader(HttpHeaders.CONTENT_TYPE);
 			if (header != null && HeaderUtils.inContentType(contentTypes, header)) {
 				String before = reverseUrl.getTarget().toURI(); //.getPath();
 				String after = reverseUrl.getServiceConfig().getPath();
-				if (before.equals(after)) {
-					//response.setEntity(entity);
-				} else if (entity != null) {
+				if (before.equals(after) == false) {
 					response.setHeader(HttpHeaders.TRANSFER_ENCODING, "chunked"); //Transfer-Encoding:chunked
 					response.removeHeaders(HttpHeaders.CONTENT_LENGTH);
-					//response.setEntity(new LinkConvertingEntity(entity, before, after, linkPatterns));
-					if (entity instanceof HttpEntity) {
-						entity = new LinkConvertingEntity((HttpEntity)entity, before, after, linkPatterns);
-					}
+					HttpEntity newEntity = new LinkConvertingEntity((HttpEntity)entity, before, after, linkPatterns);
+					((HttpEntityContainer)response).setEntity(newEntity);
+					LOG.debug("[converted] "+newEntity);
 				}
 			}
 		}

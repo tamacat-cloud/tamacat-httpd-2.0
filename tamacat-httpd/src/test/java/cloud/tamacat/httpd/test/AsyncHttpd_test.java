@@ -17,15 +17,9 @@ package cloud.tamacat.httpd.test;
 
 import java.io.IOException;
 
-import org.apache.hc.core5.http.EntityDetails;
 import org.apache.hc.core5.http.HttpException;
-import org.apache.hc.core5.http.HttpRequest;
 import org.apache.hc.core5.http.HttpResponse;
-import org.apache.hc.core5.http.nio.AsyncDataConsumer;
 import org.apache.hc.core5.http.nio.AsyncEntityProducer;
-import org.apache.hc.core5.http.nio.AsyncFilterChain;
-import org.apache.hc.core5.http.nio.AsyncPushProducer;
-import org.apache.hc.core5.http.protocol.HttpContext;
 
 import cloud.tamacat.httpd.AsyncHttpd;
 import cloud.tamacat.httpd.config.ReverseConfig;
@@ -42,36 +36,13 @@ public class AsyncHttpd_test {
 	public static void main(String[] args) {
 		AsyncHttpd.startup(ServerConfig.create().port(80)
 			.service(ServiceConfig.create().path("/")
-				.reverse(ReverseConfig.create().url("http://localhost:10081/")).filter(new AsyncHttpFilter() {
-					
+				.reverse(ReverseConfig.create().url("http://localhost:10081/"))
+				.filter(new AsyncHttpFilter() {
 					@Override
-					public AsyncDataConsumer handle(HttpRequest request, EntityDetails entityDetails, HttpContext context,
-							AsyncFilterChain.ResponseTrigger responseTrigger, AsyncFilterChain chain)
-							throws HttpException, IOException {
-						LOG.debug("#handle: "+request);
-						
-						return chain.proceed(request, entityDetails, context, new AsyncFilterChain.ResponseTrigger() {
-
-							@Override
-							public void sendInformation(HttpResponse response) throws HttpException, IOException {
-								LOG.debug("#sendInformation");
-								responseTrigger.sendInformation(response);
-							}
-							
-							@Override
-							public void submitResponse(HttpResponse response, AsyncEntityProducer entityProducer)
-									throws HttpException, IOException {
-								LOG.debug("#submitResponse");
-								
-				                responseTrigger.submitResponse(response, entityProducer);
-							}
-
-							@Override
-							public void pushPromise(HttpRequest promise, AsyncPushProducer responseProducer) throws HttpException, IOException {
-								LOG.debug("#pushPromise");
-				                responseTrigger.pushPromise(promise, responseProducer);
-							}
-						});					}
+					protected void handleSubmitResponse(HttpResponse response, AsyncEntityProducer entityProducer)
+						throws HttpException, IOException {
+						LOG.debug("[filter] "+response);
+					}
 				})
 			)
 		);
