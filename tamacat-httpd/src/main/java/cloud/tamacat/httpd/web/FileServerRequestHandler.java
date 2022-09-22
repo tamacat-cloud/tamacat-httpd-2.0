@@ -117,10 +117,10 @@ public class FileServerRequestHandler implements HttpRequestHandler {
 			if (StringUtils.isEmpty(path) || path.contains("..")) {
 				throw new NotFoundException();
 			}
-			File file = new File(docsRoot, getDecodeUri(path).replace(serviceConfig.getPath(), ""));
 			if (path.endsWith("/") && useDirectoryListings() == false) {
 				path = path + welcomeFile;
 			}
+			File file = new File(docsRoot, getDecodeUri(path).replace(serviceConfig.getPath(), ""));
 			if (!file.exists()) {
 				throw new NotFoundException("Not found file " + file.getPath());
 			} else if (!file.canRead() || file.isDirectory()) {

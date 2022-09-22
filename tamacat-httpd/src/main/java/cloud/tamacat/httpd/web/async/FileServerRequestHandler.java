@@ -126,6 +126,9 @@ public class FileServerRequestHandler implements AsyncServerRequestHandler<Messa
 			if (StringUtils.isEmpty(path) || path.contains("..")) {
 				throw new NotFoundException();
 			}
+			if (path.endsWith("/") && useDirectoryListings() == false) {
+				path = path + welcomeFile;
+			}
 			File file = new File(docsRoot, getDecodeUri(path).replace(serviceConfig.getPath(), ""));
 			if (!file.exists()) {
 				throw new NotFoundException("Not found file " + file.getPath());
