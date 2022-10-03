@@ -20,17 +20,16 @@ This is a customizable HTTP/HTTPS Server framework.
 * Example: ClassicHttpd
 
 ```java
-	public static void main(String[] args) {
-		ClassicHttpd.startup(
-			ServerConfig.create().port(80)
-				.service(ServiceConfig.create().path("/"))
-				
-				.service(ServiceConfig.create().path("/examples/")
-					.reverse(ReverseConfig.create().url("http://localhost:8080/examples/")
-				)
-			)
-		);
-	}
+public static void main(String[] args) {
+    ClassicHttpd.startup(
+        ServerConfig.create().port(80)
+            .service(ServiceConfig.create().path("/"))
+            .service(ServiceConfig.create().path("/examples/")
+                .reverse(ReverseConfig.create().url("http://localhost:8080/examples/")
+            )
+        )
+    );
+}
 ```
 
 ### DockerHub
