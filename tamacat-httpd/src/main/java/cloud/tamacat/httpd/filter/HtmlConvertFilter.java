@@ -16,6 +16,7 @@
 package cloud.tamacat.httpd.filter;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -72,8 +73,9 @@ public class HtmlConvertFilter extends HttpFilter {
 			if (reverse != null) {
 				HttpEntity entity = response.getEntity();
 				if (entity == null) return;
-				
-				String before = reverse.getReverse().getPath();
+				URL reverseUrl = reverse.getReverse();
+				if (reverseUrl == null) return;
+				String before = reverseUrl.getPath();
 				String after = reverse.getServiceConfig().getPath();
 				if (before.equals(after) == false) {
 					LOG.trace("[enabled] "+before+"->"+after);

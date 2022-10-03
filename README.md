@@ -16,6 +16,23 @@ This is a customizable HTTP/HTTPS Server framework.
 ### Source code
 - https://github.com/tamacat-cloud/tamacat-httpd-2.0
 
+
+* Example: ClassicHttpd
+
+```java
+	public static void main(String[] args) {
+		ClassicHttpd.startup(
+			ServerConfig.create().port(80)
+				.service(ServiceConfig.create().path("/"))
+				
+				.service(ServiceConfig.create().path("/examples/")
+					.reverse(ReverseConfig.create().url("http://localhost:8080/examples/")
+				)
+			)
+		);
+	}
+```
+
 ### DockerHub
 - https://hub.docker.com/r/tamacat/tamacat-httpd
 

@@ -119,6 +119,10 @@ public class ServiceConfig {
 		this.host = host;
 	}
 	
+	/**
+	 * Configure Virtual Host
+	 * @param host
+	 */
 	public ServiceConfig host(String host) {
 		setHost(host);
 		return this;

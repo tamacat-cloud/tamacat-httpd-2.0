@@ -23,9 +23,13 @@ import org.apache.hc.core5.http.HttpHost;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import cloud.tamacat.log.Log;
+import cloud.tamacat.log.LogFactory;
 import cloud.tamacat.util.JsonUtils;
 
 public class ReverseConfig {
+	
+	static final Log LOG = LogFactory.getLog(ReverseConfig.class);
 	
 	@SerializedName("url")
 	@Expose
@@ -55,7 +59,7 @@ public class ReverseConfig {
 			this.target = new HttpHost(targetUrl.getHost(), targetUrl.getPort());
 			this.url = url;
 		} catch (MalformedURLException e) {
-			e.printStackTrace();
+			LOG.warn(e.getMessage());
 		}
 	}
 	
@@ -84,6 +88,7 @@ public class ReverseConfig {
 			try {
 				this.host = new URL(host.getProtocol(), host.getHost(), host.getPort(), "");
 			} catch (MalformedURLException e) {
+				LOG.warn(e.getMessage());
 			}
 		}
 	}
@@ -92,8 +97,7 @@ public class ReverseConfig {
 		try {
 			return new URL(url);
 		} catch (MalformedURLException e) {
-			e.printStackTrace();
-			System.out.println(url);
+			LOG.warn(e.getMessage());
 		}
 		return null;
 	}
@@ -110,6 +114,7 @@ public class ReverseConfig {
 				}
 				return new URL(reverseUrl.getProtocol(), reverseUrl.getHost(), port, distUrl);
 			} catch (MalformedURLException e) {
+				LOG.warn(e.getMessage());
 			}
 		}
 		return null;
