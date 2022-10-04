@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package cloud.tamacat.httpd.tls;
+package cloud.tamacat.httpd.core.tls;
 
 import java.net.Socket;
 import java.security.Principal;

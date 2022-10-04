@@ -13,15 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package cloud.tamacat.httpd.tls;
+package cloud.tamacat.httpd.core.tls;
 
-import javax.net.ssl.SSLContext;
+public enum KeyStoreType {
 
-import cloud.tamacat.httpd.config.ServerConfig;
-
-public interface SSLContextCreator {
-
-	void setServerConfig(ServerConfig serverConfig);
-	
-	SSLContext getSSLContext();
+	JKS, PKCS12;
 }

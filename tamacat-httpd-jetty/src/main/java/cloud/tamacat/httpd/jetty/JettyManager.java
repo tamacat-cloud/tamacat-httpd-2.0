@@ -21,7 +21,6 @@ import java.util.Map;
 
 import org.eclipse.jetty.server.Server;
 
-import cloud.tamacat.httpd.Middleware;
 import cloud.tamacat.log.Log;
 import cloud.tamacat.log.LogFactory;
 import cloud.tamacat.util.StringUtils;

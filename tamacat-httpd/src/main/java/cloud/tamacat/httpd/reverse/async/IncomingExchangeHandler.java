@@ -63,8 +63,8 @@ import org.apache.hc.core5.reactor.IOReactorConfig;
 import org.apache.hc.core5.util.Timeout;
 
 import cloud.tamacat.httpd.config.ServiceConfig;
-import cloud.tamacat.httpd.listener.TraceConnPoolListener;
-import cloud.tamacat.httpd.listener.TraceHttp1StreamListener;
+import cloud.tamacat.httpd.reverse.listener.TraceConnPoolListener;
+import cloud.tamacat.httpd.reverse.listener.TraceHttp1StreamListener;
 import cloud.tamacat.log.Log;
 import cloud.tamacat.log.LogFactory;
 
