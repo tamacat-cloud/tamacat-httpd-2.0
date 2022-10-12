@@ -15,17 +15,28 @@
  */
 package cloud.tamacat.httpd.test;
 
-import cloud.tamacat.httpd.Httpd;
+import cloud.tamacat.httpd.ClassicHttpd;
 import cloud.tamacat.httpd.config.ReverseConfig;
 import cloud.tamacat.httpd.config.ServerConfig;
 import cloud.tamacat.httpd.config.ServiceConfig;
+import cloud.tamacat.httpd.filter.HtmlConvertFilter;
+import cloud.tamacat.httpd.filter.ResponseFilter;
 
-public class Httpd_test {
+public class ClassicRedirect_test {
 
 	public static void main(String[] args) {
-		Httpd.startup(ServerConfig.createAsync().port(80)
-			.service(ServiceConfig.create().path("/")
-				.reverse(ReverseConfig.create().url("http://localhost:10081/"))));
+		ClassicHttpd.startup(
+			ServerConfig.create().port(80)
+				.service(ServiceConfig.create().path("/")
+					//.docsRoot("${server.home}/src/test/resources/htdocs/")
+				)
+				
+				.service(ServiceConfig.create().path("/examples/")
+					.redirect(ReverseConfig.create().url("http://localhost:8080/examples/")
+				)
+				.filter(new HtmlConvertFilter())
+				.filter(new ResponseFilter().addHeader("X-Test: ABC"))
+			)
+		);
 	}
-
 }

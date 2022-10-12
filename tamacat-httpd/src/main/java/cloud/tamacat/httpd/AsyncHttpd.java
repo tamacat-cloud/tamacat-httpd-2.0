@@ -49,8 +49,8 @@ import cloud.tamacat.httpd.core.tls.SSLSNIContextCreator;
 import cloud.tamacat.httpd.reverse.async.IncomingExchangeHandler;
 import cloud.tamacat.httpd.reverse.html.HtmlLinkConvertInterceptor;
 import cloud.tamacat.httpd.reverse.listener.TraceHttp1StreamListener;
-import cloud.tamacat.httpd.web.async.FileServerRequestHandler;
-import cloud.tamacat.httpd.web.async.ThymeleafServerRequestHandler;
+import cloud.tamacat.httpd.web.async.FileServerHandler;
+import cloud.tamacat.httpd.web.async.ThymeleafServerHandler;
 import cloud.tamacat.log.Log;
 import cloud.tamacat.log.LogFactory;
 
@@ -167,7 +167,7 @@ public class AsyncHttpd {
 	protected void registerFileServer(final ServiceConfig serviceConfig, final AsyncServerBootstrap bootstrap) {
 		try {
 			LOG.info("register: " + serviceConfig.getPath() + "* FileServer");
-			bootstrap.register(serviceConfig.getPath() + "*", new FileServerRequestHandler(serviceConfig));
+			bootstrap.register(serviceConfig.getPath() + "*", new FileServerHandler(serviceConfig));
 		} catch (Exception e) {
 			e.printStackTrace();
 			LOG.error(e.getMessage(), e);
@@ -177,7 +177,7 @@ public class AsyncHttpd {
 	protected void registerThymeleafServer(final ServiceConfig serviceConfig, final AsyncServerBootstrap bootstrap) {
 		try {
 			LOG.info("register: " + serviceConfig.getPath() + "* ThymeleafServer");
-			bootstrap.register(serviceConfig.getPath() + "*", new ThymeleafServerRequestHandler(serviceConfig));
+			bootstrap.register(serviceConfig.getPath() + "*", new ThymeleafServerHandler(serviceConfig));
 		} catch (Exception e) {
 			e.printStackTrace();
 			LOG.error(e.getMessage(), e);

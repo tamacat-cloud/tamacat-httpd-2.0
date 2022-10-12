@@ -60,10 +60,10 @@ import cloud.tamacat.util.StringUtils;
  * 
  * @see https://hc.apache.org/httpcomponents-core-5.0.x/httpcore5/examples/AsyncFileServerExample.java
  */
-public class ThymeleafServerRequestHandler implements AsyncServerRequestHandler<Message<HttpRequest, Void>> {
+public class ThymeleafServerHandler implements AsyncServerRequestHandler<Message<HttpRequest, Void>> {
 
 	static final Log ACCESS = LogFactory.getLog("Access");
-	static final Log LOG = LogFactory.getLog(ThymeleafServerRequestHandler.class);
+	static final Log LOG = LogFactory.getLog(ThymeleafServerHandler.class);
 	static final String DEFAULT_CONTENT_TYPE = "text/html; charset=UTF-8";
 
 	protected ClassLoader loader;
@@ -83,7 +83,7 @@ public class ThymeleafServerRequestHandler implements AsyncServerRequestHandler<
 		}
 	}
 	
-	public ThymeleafServerRequestHandler(ServiceConfig serviceConfig) {
+	public ThymeleafServerHandler(ServiceConfig serviceConfig) {
 		this.serviceConfig = serviceConfig;
 		init(serviceConfig.getDocsRoot());
 	}

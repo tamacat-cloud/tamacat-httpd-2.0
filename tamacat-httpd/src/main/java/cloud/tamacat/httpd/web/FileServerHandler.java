@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 tamacat.org
+ * Copyright 2022 tamacat.org
  * ====================================================================
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -25,39 +25,38 @@
  * <http://www.apache.org/>.
  *
  */
-package cloud.tamacat.httpd.web.async;
+package cloud.tamacat.httpd.web;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.Properties;
 
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.EndpointDetails;
-import org.apache.hc.core5.http.EntityDetails;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.HttpEntityContainer;
 import org.apache.hc.core5.http.HttpException;
 import org.apache.hc.core5.http.HttpRequest;
+import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.HttpStatus;
-import org.apache.hc.core5.http.Message;
-import org.apache.hc.core5.http.nio.AsyncRequestConsumer;
-import org.apache.hc.core5.http.nio.AsyncServerRequestHandler;
-import org.apache.hc.core5.http.nio.entity.FileEntityProducer;
-import org.apache.hc.core5.http.nio.entity.NoopEntityConsumer;
-import org.apache.hc.core5.http.nio.entity.StringAsyncEntityProducer;
-import org.apache.hc.core5.http.nio.support.BasicRequestConsumer;
-import org.apache.hc.core5.http.nio.support.BasicResponseProducer;
+import org.apache.hc.core5.http.io.HttpRequestHandler;
+import org.apache.hc.core5.http.io.entity.FileEntity;
+import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.apache.hc.core5.http.protocol.HttpContext;
 import org.apache.hc.core5.http.protocol.HttpCoreContext;
 
 import cloud.tamacat.httpd.config.ServiceConfig;
+import cloud.tamacat.httpd.core.BasicHttpStatus;
 import cloud.tamacat.httpd.error.ForbiddenException;
 import cloud.tamacat.httpd.error.NotFoundException;
 import cloud.tamacat.httpd.error.ThymeleafErrorPage;
-import cloud.tamacat.httpd.web.ThymeleafListingsPage;
+import cloud.tamacat.httpd.web.page.ThymeleafListingsPage;
 import cloud.tamacat.log.Log;
 import cloud.tamacat.log.LogFactory;
 import cloud.tamacat.util.PropertyUtils;
@@ -65,15 +64,15 @@ import cloud.tamacat.util.ResourceNotFoundException;
 import cloud.tamacat.util.StringUtils;
 
 /**
- * Asynchronous embedded HTTP/1.1 file server.
+ * Embedded HTTP/1.1 file server using classic I/O.
  * 
- * @see https://hc.apache.org/httpcomponents-core-5.0.x/httpcore5/examples/AsyncFileServerExample.java
+ * @see https://hc.apache.org/httpcomponents-core-5.0.x/httpcore5/examples/ClassicFileServerExample.java
  */
-public class FileServerRequestHandler implements AsyncServerRequestHandler<Message<HttpRequest, Void>> {
+public class FileServerHandler implements HttpRequestHandler {
 
 	static final Log ACCESS = LogFactory.getLog("Access");
-	static final Log LOG = LogFactory.getLog(FileServerRequestHandler.class);
-	static final ContentType DEFAULT_CONTENT_TYPE = ContentType.TEXT_HTML.withCharset(StandardCharsets.UTF_8);
+	static final Log LOG = LogFactory.getLog(FileServerHandler.class);
+	static final String DEFAULT_CONTENT_TYPE = "text/html; charset=UTF-8";
 
 	protected ClassLoader loader;
 	protected ThymeleafErrorPage errorPage;
@@ -85,7 +84,7 @@ public class FileServerRequestHandler implements AsyncServerRequestHandler<Messa
 	protected ThymeleafListingsPage listingPage;
 	protected boolean listings;
 	
-	public FileServerRequestHandler(ServiceConfig serviceConfig) {
+	public FileServerHandler(ServiceConfig serviceConfig) {
 		this(new File(serviceConfig.getDocsRoot()));
 		this.serviceConfig = serviceConfig;
 		listings = serviceConfig.isListings();
@@ -94,7 +93,7 @@ public class FileServerRequestHandler implements AsyncServerRequestHandler<Messa
 		}
 	}
 
-	public FileServerRequestHandler(File docsRoot) {
+	public FileServerHandler(File docsRoot) {
 		this.docsRoot = docsRoot;
 		Properties props = new Properties();
 		try {
@@ -104,24 +103,17 @@ public class FileServerRequestHandler implements AsyncServerRequestHandler<Messa
 		}
 		errorPage = new ThymeleafErrorPage(props);
 	}
-
+	
 	@Override
-	public AsyncRequestConsumer<Message<HttpRequest, Void>> prepare(HttpRequest request,
-			EntityDetails entityDetails, HttpContext context) throws HttpException {
-		return new BasicRequestConsumer<>(entityDetails != null ? new NoopEntityConsumer() : null);
-	}
-
-	@Override
-	public void handle(Message<HttpRequest, Void> message, ResponseTrigger responseTrigger, HttpContext context)
-			throws HttpException, IOException {
-		HttpRequest request = message.getHead();
+	public void handle(
+            final ClassicHttpRequest request,
+            final ClassicHttpResponse response,
+            final HttpContext context) throws HttpException, IOException {
 		try {
-			URI requestUri;
-			try {
-				requestUri = request.getUri();
-			} catch (final URISyntaxException ex) {
-				throw new NotFoundException(ex.getMessage(), ex);
-			}
+			URI requestUri = request.getUri();			
+			HttpCoreContext coreContext = HttpCoreContext.adapt(context);
+			EndpointDetails endpoint = coreContext.getEndpointDetails();
+			
 			String path = requestUri.getPath();
 			if (StringUtils.isEmpty(path) || path.contains("..")) {
 				throw new NotFoundException();
@@ -135,11 +127,10 @@ public class FileServerRequestHandler implements AsyncServerRequestHandler<Messa
 			} else if (!file.canRead() || file.isDirectory()) {
 				if (useDirectoryListings()) {					
 					String html = listingPage.getListingsPage(request, file);
-					responseTrigger.submitResponse(
-						new BasicResponseProducer(HttpStatus.SC_OK,
-						new StringAsyncEntityProducer(html, DEFAULT_CONTENT_TYPE)),
-						context
-					);
+					response.setHeader("Content-Type", DEFAULT_CONTENT_TYPE);
+					response.setCode(BasicHttpStatus.SC_OK.getStatusCode());
+					response.setReasonPhrase(BasicHttpStatus.SC_OK.getReasonPhrase());
+					response.setEntity(new StringEntity(html));
 					ACCESS.info(request+" 200 [OK]");
 					return;
 				} else {
@@ -157,35 +148,41 @@ public class FileServerRequestHandler implements AsyncServerRequestHandler<Messa
 			} else {
 				contentType = ContentType.DEFAULT_BINARY;
 			}
-	
-			HttpCoreContext coreContext = HttpCoreContext.adapt(context);
-			EndpointDetails endpoint = coreContext.getEndpointDetails();
-			LOG.debug(endpoint + ": serving file " + file.getPath());
-			responseTrigger.submitResponse(
-				new BasicResponseProducer(HttpStatus.SC_OK,
-				new FileEntityProducer(file, contentType)),
-				context
-			);
+			
+			LOG.debug(endpoint + ": serving file " + file.getAbsolutePath());
+			setEntity(response, new FileEntity(file, contentType));
+			response.setCode(HttpStatus.SC_OK);
 			ACCESS.info(request+" 200 [OK]");
 		} catch (NotFoundException e) {
-			handleNotFound(request, responseTrigger, context, e);
+			handleNotFound(request, response, context, e);
 		} catch (ForbiddenException e) {
-			handleForbidden(request, responseTrigger, context, e);
+			handleForbidden(request, response, context, e);
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new NotFoundException(e.getMessage(), e);
 		}
 	}
 
-	protected void handleNotFound(HttpRequest request, ResponseTrigger responseTrigger, HttpContext context, NotFoundException e) throws HttpException, IOException {
+	protected void handleNotFound(HttpRequest request, HttpResponse response, HttpContext context, NotFoundException e) throws HttpException, IOException {
 		LOG.debug(e.getMessage());
 		String html = errorPage.getErrorPage(request, new NotFoundException());
-		responseTrigger.submitResponse(new BasicResponseProducer(HttpStatus.SC_NOT_FOUND, html, ContentType.TEXT_HTML), context);
+		setEntity(response, new StringEntity(html, ContentType.TEXT_HTML));
+		response.setCode(HttpStatus.SC_NOT_FOUND);
 		ACCESS.info(request+" 404 [NotFound]");
 	}
 	
-	protected void handleForbidden(HttpRequest request, ResponseTrigger responseTrigger, HttpContext context, ForbiddenException e) throws HttpException, IOException {
+	protected void handleForbidden(HttpRequest request, HttpResponse response, HttpContext context, ForbiddenException e) throws HttpException, IOException {
 		LOG.debug(e.getMessage());
 		String html = errorPage.getErrorPage(request, new ForbiddenException());
-		responseTrigger.submitResponse(new BasicResponseProducer(HttpStatus.SC_FORBIDDEN, html, ContentType.TEXT_HTML), context);
+		setEntity(response, new StringEntity(html, ContentType.TEXT_HTML));
+		response.setCode(HttpStatus.SC_FORBIDDEN);
 		ACCESS.info(request+" 403 [Forbidden]");
+	}
+	
+	protected void setEntity(HttpResponse response, HttpEntity entity) {
+		if (response instanceof HttpEntityContainer) {
+			((HttpEntityContainer)response).setEntity(entity);
+		}
 	}
 	
 	protected String getDecodeUri(String uri) {

@@ -71,10 +71,10 @@ import cloud.tamacat.util.StringUtils;
  * 
  * @see https://github.com/apache/httpcomponents-core/blob/5.1.x/httpcore5/src/test/java/org/apache/hc/core5/http/examples/ClassicFileServerExample.java
  */
-public class ThymeleafServerRequestHandler implements HttpRequestHandler {
+public class ThymeleafServerHandler implements HttpRequestHandler {
 
 	static final Log ACCESS = LogFactory.getLog("Access");
-	static final Log LOG = LogFactory.getLog(ThymeleafServerRequestHandler.class);
+	static final Log LOG = LogFactory.getLog(ThymeleafServerHandler.class);
 	static final String DEFAULT_CONTENT_TYPE = "text/html; charset=UTF-8";
 
 	protected ClassLoader loader;
@@ -94,7 +94,7 @@ public class ThymeleafServerRequestHandler implements HttpRequestHandler {
 		}
 	}
 	
-	public ThymeleafServerRequestHandler(ServiceConfig serviceConfig) {
+	public ThymeleafServerHandler(ServiceConfig serviceConfig) {
 		this.serviceConfig = serviceConfig;
 		init(serviceConfig.getDocsRoot());
 	}

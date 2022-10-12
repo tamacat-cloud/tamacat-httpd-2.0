@@ -66,7 +66,7 @@ public class AsyncFileServer {
 		final IOReactorConfig config = IOReactorConfig.custom().setSoTimeout(15, TimeUnit.SECONDS).setTcpNoDelay(true).build();
 
 		final HttpAsyncServer server = AsyncServerBootstrap.bootstrap().setIOReactorConfig(config)
-				.register("*", new FileServerRequestHandler(docsRoot)).create();
+				.register("*", new FileServerHandler(docsRoot)).create();
 
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override

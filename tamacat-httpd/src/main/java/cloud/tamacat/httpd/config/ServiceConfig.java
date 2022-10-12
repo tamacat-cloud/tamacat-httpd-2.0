@@ -200,6 +200,10 @@ public class ServiceConfig {
 			|| (reverses.size()>=1 || (reverse != null && StringUtils.isNotEmpty(reverse.getUrl())));
 	}
 	
+	public boolean isRedirect() {
+		return isType("redirect") && (reverse != null && StringUtils.isNotEmpty(reverse.getUrl()));
+	}
+	
 	public boolean isType(String name) {
 		return (name).equals(this.type);
 	}
@@ -227,6 +231,14 @@ public class ServiceConfig {
 		return this;
 	}
 
+	public ServiceConfig redirect(ReverseConfig reverse) {
+		if (reverse != null) {
+			this.reverse = reverse;
+			this.type = "redirect";
+		}
+		return this;
+	}
+	
 	public Collection<ReverseConfig> getReverses() {
 		return reverses;
 	}

@@ -44,8 +44,9 @@ import cloud.tamacat.httpd.reverse.ReverseProxyHandler;
 import cloud.tamacat.httpd.reverse.html.HtmlLinkConvertInterceptor;
 import cloud.tamacat.httpd.reverse.listener.TraceExceptionListener;
 import cloud.tamacat.httpd.reverse.listener.TraceHttp1StreamListener;
-import cloud.tamacat.httpd.web.FileServerRequestHandler;
-import cloud.tamacat.httpd.web.ThymeleafServerRequestHandler;
+import cloud.tamacat.httpd.web.FileServerHandler;
+import cloud.tamacat.httpd.web.RedirectHandler;
+import cloud.tamacat.httpd.web.ThymeleafServerHandler;
 import cloud.tamacat.log.Log;
 import cloud.tamacat.log.LogFactory;
 import cloud.tamacat.util.StringUtils;
@@ -151,7 +152,9 @@ public class ClassicHttpd {
 	}
 	
 	protected void register(final ServiceConfig serviceConfig, final ServerBootstrap bootstrap) {
-		if (serviceConfig.isReverseProxy()) {
+		if (serviceConfig.isRedirect()) {
+			registerRedirect(serviceConfig, bootstrap);
+		} else if (serviceConfig.isReverseProxy()) {
 			registerReverseProxy(serviceConfig, bootstrap);
 		} else if (serviceConfig.isThymeleaf()) {
 			registerThymeleafServer(serviceConfig, bootstrap);
@@ -176,12 +179,12 @@ public class ClassicHttpd {
 	
 	protected void registerFileServer(final ServiceConfig serviceConfig, final ServerBootstrap bootstrap) {
 		LOG.info("register: VirtualHost="+getVirtualHost(serviceConfig)+", path="+serviceConfig.getPath() +"* FileServer");
-		register(serviceConfig, bootstrap, new FileServerRequestHandler(serviceConfig));
+		register(serviceConfig, bootstrap, new FileServerHandler(serviceConfig));
 	}
 
 	protected void registerThymeleafServer(final ServiceConfig serviceConfig, final ServerBootstrap bootstrap) {
 		LOG.info("register: VirtualHost="+getVirtualHost(serviceConfig)+", path="+serviceConfig.getPath() + "* ThymeleafServer");
-		register(serviceConfig, bootstrap, new ThymeleafServerRequestHandler(serviceConfig));
+		register(serviceConfig, bootstrap, new ThymeleafServerHandler(serviceConfig));
 	}
 
 	protected void registerReverseProxy(final ServiceConfig serviceConfig, final ServerBootstrap bootstrap) {
@@ -191,6 +194,16 @@ public class ClassicHttpd {
 			register(serviceConfig, bootstrap, new ReverseProxyHandler(targetHost, serviceConfig));
 			
 			httpResponseInterceptors.add(new HtmlLinkConvertInterceptor());
+		} catch (Exception e) {
+			LOG.error(e.getMessage(), e);
+		}
+	}
+	
+	protected void registerRedirect(final ServiceConfig serviceConfig, final ServerBootstrap bootstrap) {
+		try {
+			final HttpHost targetHost = HttpHost.create(serviceConfig.getReverse().getTarget().toURI());
+			LOG.info("register: VirtualHost="+getVirtualHost(serviceConfig)+", path="+serviceConfig.getPath()+"* Redirect to "+targetHost);
+			register(serviceConfig, bootstrap, new RedirectHandler(targetHost, serviceConfig));
 		} catch (Exception e) {
 			LOG.error(e.getMessage(), e);
 		}
