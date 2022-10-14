@@ -41,7 +41,6 @@ import cloud.tamacat.httpd.config.ServerConfig;
 import cloud.tamacat.httpd.config.ServiceConfig;
 import cloud.tamacat.httpd.core.tls.SSLSNIContextCreator;
 import cloud.tamacat.httpd.reverse.ReverseProxyHandler;
-import cloud.tamacat.httpd.reverse.html.HtmlLinkConvertInterceptor;
 import cloud.tamacat.httpd.reverse.listener.TraceExceptionListener;
 import cloud.tamacat.httpd.reverse.listener.TraceHttp1StreamListener;
 import cloud.tamacat.httpd.web.FileServerHandler;
@@ -192,8 +191,6 @@ public class ClassicHttpd {
 			final HttpHost targetHost = HttpHost.create(serviceConfig.getReverse().getTarget().toURI());
 			LOG.info("register: VirtualHost="+getVirtualHost(serviceConfig)+", path="+serviceConfig.getPath()+"* ReverseProxy to "+targetHost);
 			register(serviceConfig, bootstrap, new ReverseProxyHandler(targetHost, serviceConfig));
-			
-			httpResponseInterceptors.add(new HtmlLinkConvertInterceptor());
 		} catch (Exception e) {
 			LOG.error(e.getMessage(), e);
 		}

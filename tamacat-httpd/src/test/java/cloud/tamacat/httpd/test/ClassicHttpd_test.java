@@ -28,7 +28,7 @@ public class ClassicHttpd_test {
 		ClassicHttpd.startup(
 			ServerConfig.create().port(80)
 				.service(ServiceConfig.create().path("/")
-					//.docsRoot("${server.home}/src/test/resources/htdocs/")
+					.docsRoot("${server.home}/src/test/resources/htdocs/")
 				)
 				
 				.service(ServiceConfig.create().path("/test/")
