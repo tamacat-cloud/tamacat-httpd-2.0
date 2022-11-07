@@ -35,7 +35,7 @@ public class AsyncHttpd_test {
 	
 	public static void main(String[] args) {
 		AsyncHttpd.startup(ServerConfig.create().port(80)
-			.service(ServiceConfig.create().path("/")
+			.service(ServiceConfig.create().path("/test/")
 				.reverse(ReverseConfig.create().url("http://localhost:10081/"))
 				.filter(new AsyncHttpFilter() {
 					@Override

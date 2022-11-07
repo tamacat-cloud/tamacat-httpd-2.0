@@ -18,16 +18,21 @@ package cloud.tamacat.httpd;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
 
+import org.apache.hc.core5.concurrent.DefaultThreadFactory;
 import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.HttpRequestInterceptor;
 import org.apache.hc.core5.http.HttpResponseInterceptor;
 import org.apache.hc.core5.http.impl.HttpProcessors;
 import org.apache.hc.core5.http.impl.bootstrap.HttpServer;
 import org.apache.hc.core5.http.impl.bootstrap.ServerBootstrap;
+import org.apache.hc.core5.http.impl.bootstrap.WorkerPoolExecutor;
 import org.apache.hc.core5.http.io.HttpRequestHandler;
 import org.apache.hc.core5.http.io.SocketConfig;
 import org.apache.hc.core5.http.protocol.HttpProcessorBuilder;
@@ -95,14 +100,30 @@ public class ClassicHttpd {
 	public HttpServer createHttpServer(final ServerConfig config) {
 		final Collection<ServiceConfig> configs = config.getServices();
 		
+		//Executors.newVirtualThreadPerTaskExecutor();
+		
 		final ServerBootstrap bootstrap = ServerBootstrap.bootstrap()
+				.setThreadPoolExecutor(
+					new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS,
+						new SynchronousQueue<>(), 
+						//new DefaultThreadFactory("HTTP-listener-"+config.getPort())
+						createThreadFactory(config.useVirtualThread(), "HTTP-listener-"+config.getPort())
+					)
+				)
+                .setWorkerPoolExecutor(
+                	new WorkerPoolExecutor(0, Integer.MAX_VALUE, 1L, TimeUnit.SECONDS, new SynchronousQueue<>(),
+                		//new DefaultThreadFactory("HTTP-worker", new ThreadGroup("HTTP-workers"), true))
+                		createThreadFactory(config.useVirtualThread(), "HTTP-worker-")
+                	)
+                )
 				.setCanonicalHostName(config.getHost())
 				.setListenerPort(config.getPort())
 				.setStreamListener(new TraceHttp1StreamListener("client<-httpd"))
 				.setSocketConfig(SocketConfig.custom()
 				.setSoKeepAlive(config.keepAlive())
 				.setSoReuseAddress(config.soReuseAddress())
-				.setSoTimeout(config.getSoTimeout(), TimeUnit.SECONDS).build());
+				.setSoTimeout(config.getSoTimeout(), TimeUnit.SECONDS)
+				.build());
 
 		LOG.trace(config.getHttpsConfig());
 
@@ -216,5 +237,23 @@ public class ClassicHttpd {
 
 	public void addHttpResponseInterceptor(HttpResponseInterceptor interceptor) {
 		httpResponseInterceptors.add(interceptor);
+	}
+	
+	@SuppressWarnings("preview")
+	protected ThreadFactory createThreadFactory(boolean useVirtualThread, String name) {
+		if (useVirtualThread) {
+			return Thread.ofVirtual().name(name).factory();
+		} else {
+			return new DefaultThreadFactory(name);
+		}
+	}
+	
+	@SuppressWarnings("preview")
+	protected ThreadFactory createThreadFactory(boolean useVirtualThread, String name, long count) {
+		if (useVirtualThread) {
+			return Thread.ofVirtual().name(name, count).factory();
+		} else {
+			return new DefaultThreadFactory(name, new ThreadGroup(name), true); //"HTTP-workers"
+		}
 	}
 }

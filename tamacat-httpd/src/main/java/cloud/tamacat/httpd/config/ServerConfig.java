@@ -75,6 +75,10 @@ public class ServerConfig implements Serializable {
 	@SerializedName("https")
 	@Expose
 	HttpsConfig httpsConfig;
+
+	@SerializedName("useVirtualThread")
+	@Expose
+ 	boolean useVirtualThread;
 	
 	public static ServerConfig create() {
 		return new ServerConfig();
@@ -234,7 +238,16 @@ public class ServerConfig implements Serializable {
 		}
 		return false;
 	}
-
+	
+	public ServerConfig virtualThread(boolean useVirtualThread) {
+		this.useVirtualThread = useVirtualThread;
+		return this;
+	}
+	
+	public boolean useVirtualThread() {
+		return useVirtualThread;
+	}
+	
 	@Override
 	public String toString() {
 		return "ServerConfig [serverName=" + serverName + ", host=" + host + ", protocol=" + protocol + ", port=" + port

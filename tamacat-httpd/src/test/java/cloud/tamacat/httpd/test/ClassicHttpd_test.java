@@ -27,6 +27,7 @@ public class ClassicHttpd_test {
 	public static void main(String[] args) {
 		ClassicHttpd.startup(
 			ServerConfig.create().port(80)
+				.virtualThread(true)
 				.service(ServiceConfig.create().path("/")
 					.docsRoot("${server.home}/src/test/resources/htdocs/")
 				)
@@ -34,8 +35,8 @@ public class ClassicHttpd_test {
 				.service(ServiceConfig.create().path("/test/")
 					.reverse(ReverseConfig.create().url("http://localhost:10081/")
 				)
-				.filter(new HtmlConvertFilter())
-				.filter(new ResponseFilter().addHeader("X-Test: ABC"))
+				//.filter(new HtmlConvertFilter())
+				//.filter(new ResponseFilter().addHeader("X-Test: ABC"))
 			)
 		);
 	}

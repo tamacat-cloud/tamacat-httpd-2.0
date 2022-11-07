@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>cloud.tamacat</groupId>
   <artifactId>tamacat</artifactId>
-  <version>2.0-SNAPSHOT</version>
+  <version>2.0-jdk19-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>tamacat-httpd</name>
   <url>https://tamacat.cloud/</url>
@@ -28,9 +28,9 @@
   </scm>
 
   <properties>
-    <java.version>17</java.version>
-    <maven.compiler.source>17</maven.compiler.source>
-    <maven.compiler.target>17</maven.compiler.target>
+    <java.version>19</java.version>
+    <maven.compiler.source>19</maven.compiler.source>
+    <maven.compiler.target>19</maven.compiler.target>
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm:ssZ</maven.build.timestamp.format>
     <junit.jupiter.version>[5.8.2,5.9.0-M1)</junit.jupiter.version>
     <buildDate>${maven.build.timestamp}</buildDate>
@@ -45,7 +45,7 @@
     <dependency>
       <groupId>cloud.tamacat</groupId>
       <artifactId>tamacat-core</artifactId>
-      <version>${project.version}</version>
+      <version>2.0-SNAPSHOT</version>
     </dependency>
 
     <dependency>

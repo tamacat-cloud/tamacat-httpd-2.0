@@ -44,8 +44,9 @@ module cloud.tamacat.httpd {
 	opens cloud.tamacat.httpd.web;
 	opens cloud.tamacat.httpd.web.async;
 	
-	requires transitive org.apache.httpcomponents.core5.httpcore5;
-	requires transitive org.apache.httpcomponents.core5.httpcore5.h2;
+	//requires transitive org.apache.httpcomponents.core5.httpcore5;
+	requires transitive httpcore5;
+	
 	requires transitive thymeleaf;
 
 	requires transitive cloud.tamacat.core;
