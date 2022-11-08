@@ -46,7 +46,7 @@ import org.apache.hc.core5.http.Message;
 import org.apache.hc.core5.http.nio.AsyncRequestConsumer;
 import org.apache.hc.core5.http.nio.AsyncServerRequestHandler;
 import org.apache.hc.core5.http.nio.entity.FileEntityProducer;
-import org.apache.hc.core5.http.nio.entity.NoopEntityConsumer;
+import org.apache.hc.core5.http.nio.entity.DiscardingEntityConsumer;
 import org.apache.hc.core5.http.nio.entity.StringAsyncEntityProducer;
 import org.apache.hc.core5.http.nio.support.BasicRequestConsumer;
 import org.apache.hc.core5.http.nio.support.BasicResponseProducer;
@@ -108,7 +108,7 @@ public class FileServerHandler implements AsyncServerRequestHandler<Message<Http
 	@Override
 	public AsyncRequestConsumer<Message<HttpRequest, Void>> prepare(HttpRequest request,
 			EntityDetails entityDetails, HttpContext context) throws HttpException {
-		return new BasicRequestConsumer<>(entityDetails != null ? new NoopEntityConsumer() : null);
+		return new BasicRequestConsumer<>(entityDetails != null ? new DiscardingEntityConsumer<>() : null);
 	}
 
 	@Override
