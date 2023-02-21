@@ -76,6 +76,11 @@ public class ServerConfig implements Serializable {
 	@Expose
 	HttpsConfig httpsConfig;
 	
+	
+	@SerializedName("contentEncoding")
+	@Expose
+	String contentEncoding;
+	
 	public static ServerConfig create() {
 		return new ServerConfig();
 	}
@@ -209,7 +214,16 @@ public class ServerConfig implements Serializable {
 		}
 		return this;
 	}
+	
+	public String getContentEncoding() {
+		return contentEncoding;
+	}
 
+	public ServerConfig contentEncoding(String contentEncoding) {
+		this.contentEncoding = contentEncoding;
+		return this;
+	}
+	
 	public Collection<ServiceConfig> getServices() {
 		return services;
 	}
@@ -238,8 +252,9 @@ public class ServerConfig implements Serializable {
 	@Override
 	public String toString() {
 		return "ServerConfig [serverName=" + serverName + ", host=" + host + ", protocol=" + protocol + ", port=" + port
-				+ ", maxTotal=" + maxTotal + ", maxParRoute=" + maxParRoute + ", soTimeout=" + soTimeout + ", services="
-				+ services + "]";
+				+ ", maxTotal=" + maxTotal + ", maxParRoute=" + maxParRoute + ", soTimeout=" + soTimeout + ", "
+				+ "contentEncoding="+contentEncoding+", "
+				+ "services=" + services + "]";
 	}
 
 	public static ServerConfig load(String json) {

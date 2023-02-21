@@ -40,6 +40,7 @@ import cloud.tamacat.httpd.config.HttpsConfig;
 import cloud.tamacat.httpd.config.ServerConfig;
 import cloud.tamacat.httpd.config.ServiceConfig;
 import cloud.tamacat.httpd.core.tls.SSLSNIContextCreator;
+import cloud.tamacat.httpd.filter.GzipContentEncodingInterceptor;
 import cloud.tamacat.httpd.reverse.ReverseProxyHandler;
 import cloud.tamacat.httpd.reverse.listener.TraceExceptionListener;
 import cloud.tamacat.httpd.reverse.listener.TraceHttp1StreamListener;
@@ -139,6 +140,12 @@ public class ClassicHttpd {
 			});
 		}
 
+		//support Content-Encoding: gzip
+		if ("gzip".equals(config.getContentEncoding())) {
+			addHttpRequestInterceptor(new GzipContentEncodingInterceptor());
+			addHttpResponseInterceptor(new GzipContentEncodingInterceptor());
+		}
+		
 		HttpProcessorBuilder httpProcessorBuilder = HttpProcessors.customServer(config.getServerName());
 		httpRequestInterceptors.forEach(i-> httpProcessorBuilder.add(i));
 		httpResponseInterceptors.forEach(i-> httpProcessorBuilder.add(i));
@@ -210,11 +217,13 @@ public class ClassicHttpd {
 		return StringUtils.isNotEmpty(serviceConfig.getHostname()) ? serviceConfig.getHostname() : "default";
 	}
 	
-	public void addHttpRequestInterceptor(HttpRequestInterceptor interceptor) {
+	public ClassicHttpd addHttpRequestInterceptor(HttpRequestInterceptor interceptor) {
 		httpRequestInterceptors.add(interceptor);
+		return this;
 	}
 
-	public void addHttpResponseInterceptor(HttpResponseInterceptor interceptor) {
+	public ClassicHttpd addHttpResponseInterceptor(HttpResponseInterceptor interceptor) {
 		httpResponseInterceptors.add(interceptor);
+		return this;
 	}
 }

@@ -32,11 +32,11 @@ public class ClassicHttpd_test {
 				)
 				
 				.service(ServiceConfig.create().path("/test/")
-					.reverse(ReverseConfig.create().url("http://localhost:10081/")
+					.reverse(ReverseConfig.create().url("http://localhost:1081/")
 				)
 				.filter(new HtmlConvertFilter())
 				.filter(new ResponseFilter().addHeader("X-Test: ABC"))
-			)
+			).contentEncoding("gzip")
 		);
 	}
 }

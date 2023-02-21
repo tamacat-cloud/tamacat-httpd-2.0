@@ -128,6 +128,7 @@ public class ReverseProxy {
 		}).setMaxTotal(maxTotal).setDefaultMaxPerRoute(defaultMaxPerRoute).create();
 
 		HttpAsyncServer server = AsyncServerBootstrap.bootstrap()
+			.setExceptionCallback(e -> e.printStackTrace())
 			.setIOReactorConfig(reactor)
 			.setStreamListener(new Http1StreamListener() {
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2022 tamacat.org
+ * Copyright 2009-2023 tamacat.org
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,64 +28,68 @@ import org.apache.hc.core5.http.HttpEntityContainer;
 import org.apache.hc.core5.http.HttpException;
 import org.apache.hc.core5.http.HttpHeaders;
 import org.apache.hc.core5.http.HttpRequest;
+import org.apache.hc.core5.http.HttpRequestInterceptor;
 import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.HttpResponseInterceptor;
 import org.apache.hc.core5.http.HttpVersion;
 import org.apache.hc.core5.http.io.entity.HttpEntityWrapper;
 import org.apache.hc.core5.http.protocol.HttpContext;
-import org.apache.hc.core5.http.protocol.HttpCoreContext;
 
 import cloud.tamacat.httpd.util.HeaderUtils;
 import cloud.tamacat.log.Log;
 import cloud.tamacat.log.LogFactory;
-import cloud.tamacat.util.ExceptionUtils;
 import cloud.tamacat.util.StringUtils;
 
 /**
  * <p>Server-side interceptor to handle Gzip-encoded responses.<br>
  * The cord of the basis is Apache HttpComponents {@code ResponseGzipCompress.java}.</p>
  *
- * <pre>Example:{@code components.xml}
- * {@code <bean id="gzip" class="org.tamacat.httpd.filter.GzipResponseInterceptor">
- *  <property name="contentType">
- *    <value>html,xml,css,javascript</value>
- *  </property>
- * </bean>
- * }</pre>
- *
  * {@link http://svn.apache.org/repos/asf/httpcomponents/httpcore/trunk/contrib/src/main/java/org/apache/http/contrib/compress/ResponseGzipCompress.java}
  */
-public class GzipResponseInterceptor implements HttpResponseInterceptor {
+public class GzipContentEncodingInterceptor implements HttpRequestInterceptor, HttpResponseInterceptor {
 
-	static final Log LOG = LogFactory.getLog(GzipResponseInterceptor.class);
+	static final Log LOG = LogFactory.getLog(GzipContentEncodingInterceptor.class);
 	protected static final String GZIP_CODEC = "gzip";
+	protected static final String HEADER_ACCEPT_ENCODING = "GzipResponseInterceptor.Accept-Encoding";
 
 	protected Set<String> contentTypes = new HashSet<String>();
 	protected boolean useAll = true;
 
+	public GzipContentEncodingInterceptor() {
+		//default content-type
+		contentType("html,xml,css,javascript,json,woff,woff2,ico");
+	}
+	
 	@Override
-	public void process(HttpResponse response, EntityDetails entity, HttpContext context)
+	public void process(HttpRequest req, EntityDetails entity, HttpContext context)
 			throws HttpException, IOException {
-		if (response instanceof HttpEntityContainer == false || entity == null || entity instanceof HttpEntity == false) return;
-		if (context == null) {
-			throw new IllegalArgumentException("HTTP context may not be null");
-		}
-		HttpRequest request = (HttpRequest) context.getAttribute(HttpCoreContext.HTTP_REQUEST);
-		Header aeheader = request != null ? request.getFirstHeader(HttpHeaders.ACCEPT_ENCODING) : null;
-		if (request != null && request.getVersion().greaterEquals(HttpVersion.HTTP_1_1)
-				&& aeheader != null && useCompress(response.getFirstHeader(HttpHeaders.CONTENT_TYPE))) {
-			String ua = HeaderUtils.getHeader(request, "User-Agent");
+		//Get the Accept-Encoding header for HTTP/1.1
+		String acceptEncoding = HeaderUtils.getHeader(req, HttpHeaders.ACCEPT_ENCODING);
+		if (req != null && req.getVersion().greaterEquals(HttpVersion.HTTP_1_1)) {
+			String ua = HeaderUtils.getHeader(req, "User-Agent");
 			if (ua != null && ua.indexOf("MSIE 6.0") >= 0) {
 				return; //Skipped for IE6 bug(KB823386)
 			}
-			String codecs = aeheader.getValue();
+			context.setAttribute(HEADER_ACCEPT_ENCODING, acceptEncoding);
+		}
+	}
+	
+	@Override
+	public void process(HttpResponse resp, EntityDetails entity, HttpContext context)
+			throws HttpException, IOException {
+		if (resp instanceof HttpEntityContainer == false || entity == null || entity instanceof HttpEntity == false) return;
+		if (context == null) {
+			throw new IllegalArgumentException("HTTP context may not be null");
+		}
+		//HttpRequest req = (HttpRequest) context.getAttribute(HttpCoreContext.HTTP_REQUEST);
+		String codecs = (String) context.getAttribute(HEADER_ACCEPT_ENCODING);
+		if (StringUtils.isNotEmpty(codecs) && useCompress(resp.getFirstHeader(HttpHeaders.CONTENT_TYPE))) {
 			if (codecs != null && codecs.toLowerCase().contains(GZIP_CODEC)) {
 				GzipCompressingEntity gzipEntity = new GzipCompressingEntity((HttpEntity)entity);
-				((HttpEntityContainer)response).setEntity(gzipEntity);
-				response.setHeader(HttpHeaders.CONTENT_ENCODING, GZIP_CODEC); //Content-Encoding:gzip
-				response.setHeader(HttpHeaders.TRANSFER_ENCODING, "chunked"); //Transfer-Encoding:chunked
-				response.removeHeaders(HttpHeaders.CONTENT_LENGTH);
-				return;
+				((HttpEntityContainer)resp).setEntity(gzipEntity);
+				resp.setHeader(HttpHeaders.CONTENT_ENCODING, GZIP_CODEC); //Content-Encoding:gzip
+				resp.setHeader(HttpHeaders.TRANSFER_ENCODING, "chunked"); //Transfer-Encoding:chunked
+				resp.removeHeaders(HttpHeaders.CONTENT_LENGTH);
 			}
 		}
 	}
@@ -107,17 +111,23 @@ public class GzipResponseInterceptor implements HttpResponseInterceptor {
 	 * @param contentType Comma Separated Value of content-type or sub types.
 	 */
 	public void setContentType(String contentType) {
+		contentTypes.clear();
 		if (StringUtils.isNotEmpty(contentType)) {
 			String[] csv = StringUtils.split(contentType, ",");
 			for (String t : csv) {
 				contentTypes.add(t.toLowerCase());
 				useAll = false;
-				String[] types = t.split(";")[0].split("/");
+				String[] types = StringUtils.split(StringUtils.split(t, ";")[0], "/");
 				if (types.length >= 2) {
 					contentTypes.add(types[1].toLowerCase());
 				}
 			}
 		}
+	}
+	
+	public GzipContentEncodingInterceptor contentType(String contentType) {
+		setContentType(contentType);
+		return this;
 	}
 
 	/**
@@ -178,11 +188,16 @@ public class GzipResponseInterceptor implements HttpResponseInterceptor {
 			try {
 				wrappedEntity.writeTo(gzip);
 			} finally {
-				try {
-					gzip.close();
-				} catch (IOException e) {
-					LOG.debug(ExceptionUtils.getStackTrace(e, 100));
+				close(gzip);
+			}
+		}
+		
+		void close(AutoCloseable closeable) {
+			try {
+				if (closeable != null) {
+					closeable.close();
 				}
+			} catch (Exception e) {
 			}
 		}
 	}

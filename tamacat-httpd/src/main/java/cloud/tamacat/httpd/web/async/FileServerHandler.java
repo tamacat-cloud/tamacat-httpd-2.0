@@ -146,17 +146,9 @@ public class FileServerHandler implements AsyncServerRequestHandler<Message<Http
 					throw new ForbiddenException("Cannot read file " + file.getPath());
 				}
 			}
-			ContentType contentType;
+			
 			String filename = file.getName().toLowerCase(Locale.ROOT);
-			if (filename.endsWith(".txt")) {
-				contentType = ContentType.TEXT_PLAIN;
-			} else if (filename.endsWith(".html") || filename.endsWith(".htm")) {
-				contentType = ContentType.TEXT_HTML;
-			} else if (filename.endsWith(".xml")) {
-				contentType = ContentType.TEXT_XML;
-			} else {
-				contentType = ContentType.DEFAULT_BINARY;
-			}
+			ContentType contentType = getContentType(filename);
 	
 			HttpCoreContext coreContext = HttpCoreContext.adapt(context);
 			EndpointDetails endpoint = coreContext.getEndpointDetails();
@@ -171,6 +163,18 @@ public class FileServerHandler implements AsyncServerRequestHandler<Message<Http
 			handleNotFound(request, responseTrigger, context, e);
 		} catch (ForbiddenException e) {
 			handleForbidden(request, responseTrigger, context, e);
+		}
+	}
+	
+	protected ContentType getContentType(String filename) {
+		if (filename.endsWith(".txt")) {
+			return ContentType.TEXT_PLAIN;
+		} else if (filename.endsWith(".html") || filename.endsWith(".htm")) {
+			return ContentType.TEXT_HTML;
+		} else if (filename.endsWith(".xml")) {
+			return ContentType.TEXT_XML;
+		} else {
+			return ContentType.DEFAULT_BINARY;
 		}
 	}
 
