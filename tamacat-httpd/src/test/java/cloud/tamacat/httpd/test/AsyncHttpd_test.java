@@ -36,12 +36,12 @@ public class AsyncHttpd_test {
 	public static void main(String[] args) {
 		AsyncHttpd.startup(ServerConfig.create().port(80)
 			.service(ServiceConfig.create().path("/")
-				.reverse(ReverseConfig.create().url("http://localhost:10081/"))
+				.reverse(ReverseConfig.create().url("http://localhost:1081/"))
 				.filter(new AsyncHttpFilter() {
 					@Override
 					protected void handleSubmitResponse(HttpResponse response, AsyncEntityProducer entityProducer)
 						throws HttpException, IOException {
-						LOG.debug("[filter] "+response);
+						LOG.info("[filter] "+response);
 					}
 				})
 			)
