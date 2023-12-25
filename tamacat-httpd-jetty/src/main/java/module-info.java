@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-module cloud.tamacat.httpd.jetty {
+open module cloud.tamacat.httpd.jetty {
 	
 	exports cloud.tamacat.httpd.jetty;
-	opens cloud.tamacat.httpd.jetty;
 	
 	requires transitive org.eclipse.jetty.server;
 	requires transitive org.eclipse.jetty.servlet;
